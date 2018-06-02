@@ -3,6 +3,7 @@ const path = require("path");
 const HtmlWebpackPlugin = require("html-webpack-plugin");
 const BabiliPlugin = require("babili-webpack-plugin");
 const ExtractTextPlugin = require("extract-text-webpack-plugin");
+const helpers = require("./config/helpers");
 
 // Config directories
 const SRC_DIR = path.resolve(__dirname, "src");
@@ -27,29 +28,33 @@ module.exports = {
 					use: ["css-loader", "sass-loader"]
 				})
 			},
+
 			{
 				test: /\.jsx?$/,
 				use: [{ loader: "babel-loader" }],
 				include: defaultInclude
 			},
 			{
-				test: /\.(jpe?g|png|gif)$/,
+				test: /\.(jpe?g|png|gif|svg)$/,
 				use: [{ loader: "file-loader?name=img/[name]__[hash:base64:5].[ext]" }],
 				include: defaultInclude
 			},
 			{
-				test: /\.(eot|svg|ttf|woff|woff2)$/,
-				use: [{ loader: "file-loader?name=font/[name]__[hash:base64:5].[ext]" }],
-				include: defaultInclude
+				test: /\.woff(2)?(\?v=[0-9]\.[0-9]\.[0-9])?$/,
+				loader: "url-loader?limit=10000&mimetype=application/font-woff"
 			}
 		]
 	},
 	target: "electron-renderer",
 	plugins: [
-		new HtmlWebpackPlugin(),
+		new HtmlWebpackPlugin({
+			template: helpers.root("public/index.html"),
+			inject: "body",
+			title: "Electron Fixes"
+		}),
 		new ExtractTextPlugin("bundle.css"),
 		new webpack.DefinePlugin({
-			"process.env.NODE_ENV": JSON.stringify("production")
+			"process.env.NODE_ENV": '"production"'
 		}),
 		new BabiliPlugin()
 	],

@@ -1,3 +1,96 @@
-h1 {
-	color: red;
+.group {
+	margin: 10px;
+	border: 2px solid #515151;
+	color: black;
+	font-family: consolas;
+}
+
+.main {
+	height: 130px;
+}
+
+.alt {
+	height: 110px;
+}
+
+.btns {
+	text-align: center;
+	margin: 0 auto;
+
+	button {
+		margin: 0 10px;
+		width: 95px;
+		height: 30px;
+		background-color: #414141;
+		border: none;
+		font-size: 14px;
+		color: white;
+		letter-spacing: 3px;
+		&:hover {
+			cursor: pointer;
+		}
+	}
+}
+
+.container {
+	display: inline-block;
+	position: relative;
+	margin-top: 6px;
+	padding-left: 27px;
+	cursor: pointer;
+	font-size: 20px;
+	user-select: none;
+	width: 85%;
+	margin-left: 5px;
+	line-height: 16px;
+	padding-bottom: 10px;
+	letter-spacing: 2px;
+
+	input {
+		position: absolute;
+		opacity: 0;
+		cursor: pointer;
+	}
+}
+
+.checkmark {
+	position: absolute;
+	top: 0;
+	left: 0;
+	height: 15px;
+	width: 15px;
+	border: 2px solid #515151;
+	&:after {
+		left: 3px;
+		top: 0px;
+		width: 5px;
+		height: 8px;
+		border: solid white;
+		border-width: 0 3px 3px 0;
+		transform: rotate(45deg);
+	}
+}
+
+.container input:checked ~ .checkmark {
+	background-color: #515151;
+}
+
+.checkmark:after {
+	content: "";
+	position: absolute;
+	display: none;
+}
+
+/* Show the checkmark when checked */
+.container input:checked ~ .checkmark:after {
+	display: block;
+}
+
+#set-lvl {
+	display: block;
+	text-align: center;
+	margin: 0 auto;
+	margin-top: 7px;
+	height: 20px;
+	border: 2px solid #515151;
 }

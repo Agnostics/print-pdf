@@ -9,13 +9,28 @@
 		"url": "https://github.com/agnostics/print-pdf.git"
 	},
 	"license": "MIT",
-	"main": "./src/main.js",
+	"main": "main.js",
 	"scripts": {
-		"prod": "webpack --config webpack.build.config.js && electron --noDevServer . --mode=production",
+		"prod": "webpack --config webpack.build.config.js && electron --noDevServer .",
 		"dev": "webpack-dev-server --hot --host 0.0.0.0 --config=./webpack.dev.config.js --mode=development",
 		"build": "webpack --config webpack.build.config.js",
 		"package": "webpack --config webpack.build.config.js",
-		"postpackage": "electron-packager ./ --out=./builds"
+		"postpackage": "electron-builder"
+	},
+	"build": {
+		"appId": "com.brandon.app",
+		"productName": "print-pdf",
+		"win": {
+			"target": "portable"
+		},
+		"portable": {
+			"requestExecutionLevel": "user"
+		},
+		"directories": {
+			"output": "builds"
+		},
+		"asar": true,
+		"files": ["package.json", "main.js", "dist/**/*"]
 	},
 	"devDependencies": {
 		"babel-core": "^6.26.3",
@@ -24,8 +39,9 @@
 		"babili-webpack-plugin": "^0.1.2",
 		"css-loader": "^0.28.11",
 		"electron": "^2.0.2",
+		"electron-builder": "^20.15.1",
 		"electron-packager": "^12.1.0",
-		"extract-text-webpack-plugin": "^3.0.2",
+		"extract-text-webpack-plugin": "^4.0.0-beta.0",
 		"file-loader": "^1.1.11",
 		"html-webpack-plugin": "^3.2.0",
 		"node-sass": "^4.9.0",

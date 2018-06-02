@@ -1,0 +1,34 @@
+#titlebar {
+	height: 30px;
+	width: 100%;
+	display: inline-block;
+	background: linear-gradient(45deg, #232526, #414345);
+	color: white;
+	font-family: consolas;
+}
+
+.job-number {
+	display: inline-block;
+	vertical-align: -webkit-baseline-middle;
+	padding-left: 10px;
+	-webkit-app-region: drag;
+	width: 85%;
+	letter-spacing: 3px;
+}
+
+.close-btn {
+	display: inline-block;
+	position: absolute;
+	right: 0;
+	height: 25px;
+	padding: 0 10px;
+	font-size: 18px;
+	font-weight: bold;
+	color: white;
+	line-height: 26px;
+
+	&:hover {
+		color: #acacac;
+		cursor: pointer;
+	}
+}
