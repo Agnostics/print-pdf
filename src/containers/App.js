@@ -2,7 +2,10 @@ import React, { Component } from "react";
 import { ipcRenderer as ipc, remote } from "electron";
 import "./global.scss";
 import "./style.scss";
+
 import Titlebar from "../components/Titlebar";
+import Checkbox from "../components/Checkbox";
+import fs from "fs";
 
 class App extends React.Component {
 	constructor(props) {
@@ -21,6 +24,7 @@ class App extends React.Component {
 		this.handleChange = this.handleChange.bind(this);
 		this.handleLevel = this.handleLevel.bind(this);
 		this.pdfOut = this.pdfOut.bind(this);
+		this.updatePdf = this.updatePdf.bind(this);
 	}
 
 	componentDidMount() {
@@ -69,42 +73,80 @@ class App extends React.Component {
 		});
 	}
 
+	updatePdf() {
+		let company = "";
+		let draftNumber = "";
+		let run = false;
+
+		let jobNumber = remote
+			.getGlobal("jobNumber")
+			.split("_")[1]
+			.split("x")[0];
+		let xNumber = remote
+			.getGlobal("jobNumber")
+			.split("_")[1]
+			.split("x")[1];
+
+		let location = `C:\\${jobNumber}\\x${xNumber}`; //TODO: Change to M:\\ When ready for production
+
+		fs.readdir(location, (err, files) => {
+			files.forEach(a => {
+				if (a.indexOf(".pdf") > -1) run = true;
+			});
+
+			if (run) {
+				files.forEach(file => {
+					let temp = file.split(".");
+
+					if (temp[1] === "pdf") {
+						if (temp[0].split("_").length > 4) {
+							company = temp[0].split("_")[2];
+							draftNumber = temp[0].split("_");
+							draftNumber = draftNumber[draftNumber.length - 1].substring(5);
+
+							fs.rename(`${location}\\${file}`, `${location}\\Old PDF\\${file}`, err => {
+								if (err) {
+									console.log(err);
+									return;
+								}
+							});
+						}
+					}
+				});
+
+				draftNumber++;
+
+				this.state.proofs.map(type => {
+					name = `${remote.getGlobal("jobNumber").substring(4)}_${company}_${type.charAt(0).toUpperCase() +
+						type.slice(1)}_Draft${draftNumber}`;
+
+					if (!fs.existsSync(`${location}\\${name}`)) {
+						ipc.send("print-pdf", type, location, name);
+					} else {
+						console.log("SAME DRAFT # - WUT");
+						//TODO: Handle error
+					}
+				});
+			} else {
+				console.log("NEED COMPANY NAME");
+				//TODO: Setup company name prompt
+			}
+		});
+	}
+
 	render() {
 		return (
 			<div>
 				<Titlebar />
 				<div className="main group">
-					<label className="container">
-						<input type="checkbox" checked={this.state.clean} onChange={this.toggle.bind(this, "clean")} />
-						<span className="checkmark" />
-						clean
-					</label>
-					<label className="container">
-						<input type="checkbox" checked={this.state.marked} onChange={this.toggle.bind(this, "marked")} />
-						<span className="checkmark" />
-						marked
-					</label>
-					<label className="container">
-						<input type="checkbox" checked={this.state.markedCPO} onChange={this.toggle.bind(this, "markedCPO")} />
-						<span className="checkmark" />markedCPO
-					</label>
-					<label className="container">
-						<input type="checkbox" checked={this.state.cumulative} onChange={this.toggle.bind(this, "cumulative")} />
-						<span className="checkmark" />
-						cumulative
-					</label>
+					<Checkbox checked={this.state.clean} change={this.toggle.bind(this, "clean")} label="clean" />
+					<Checkbox checked={this.state.marked} change={this.toggle.bind(this, "marked")} label="marked" />
+					<Checkbox checked={this.state.markedCPO} change={this.toggle.bind(this, "markedCPO")} label="markedCPO" />
+					<Checkbox checked={this.state.cumulative} change={this.toggle.bind(this, "cumulative")} label="cumulative" />
 				</div>
 				<div className="alt group">
-					<label className="container">
-						<input type="checkbox" checked={this.state.marklvl} onChange={this.toggle.bind(this, "marklvl")} />
-						<span className="checkmark" />
-						marked
-					</label>
-					<label className="container">
-						<input type="checkbox" checked={this.state.cpolvl} onChange={this.toggle.bind(this, "cpolvl")} />
-						<span className="checkmark" />
-						markedCPO
-					</label>
+					<Checkbox checked={this.state.marklvl} change={this.toggle.bind(this, "marklvl")} label="marked" />
+					<Checkbox checked={this.state.cpolvl} change={this.toggle.bind(this, "cpolvl")} label="markedCPO" />
 
 					<div>
 						<input
@@ -119,7 +161,7 @@ class App extends React.Component {
 				</div>
 				<div className="btns">
 					<button onClick={this.pdfOut}>pdf out</button>
-					<button disabled>update</button>
+					<button onClick={this.updatePdf}>update</button>
 				</div>
 			</div>
 		);
