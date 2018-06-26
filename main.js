@@ -58,8 +58,8 @@ function createWindow() {
 }
 
 function getJobLocation() {
-	// const arg1 = process.argv[1];
-	const arg1 = "//sfphq-xppsrv01/XPP/SFP/alljobz/CLS_training/GRP_brandon/JOB_s001337x1_pom"; //TODO: Change back to other arg1 variable
+	const arg1 = process.argv[1];
+	// const arg1 = "//sfphq-xppsrv01/XPP/SFP/alljobz/CLS_training/GRP_brandon/JOB_s001337x1_pom"; //TODO: Change back to other arg1 variable
 
 	let path = arg1.split("/");
 	path = path.slice(4, path.length);
@@ -97,14 +97,20 @@ ipcMain.on("print-pdf", function(event, TYPE, LOCATION, NAME) {
 
 	console.log(`Processing: ${print_format[TYPE]}`);
 
+	// let ls = spawn("ping 127.1.0.0", [], { shell: true });
+
 	//TODO: Uncomment below for production
-	// let ls = spawn(print_format[TYPE], [], { shell: true, cwd: global.jobLocation });
+	let ls = spawn(print_format[TYPE], [], { shell: true, cwd: global.jobLocation });
 
-	// ls.stdout.on("data", data => {
-	// 	event.sender.send("printed", `stdout: ${data}`);
-	// });
+	ls.stdout.on("data", data => {
+		event.sender.send("printed", `stdout: ${data}`);
+	});
 
-	// ls.stderr.on("data", data => {
-	// 	console.log(`stderr: ${data}`);
-	// });
+	ls.stderr.on("data", data => {
+		console.log(`stderr: ${data}`);
+	});
+
+	ls.on("close", function() {
+		event.sender.send("proof_made", `Finished ${NAME}`);
+	});
 });

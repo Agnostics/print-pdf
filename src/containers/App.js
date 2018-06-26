@@ -11,6 +11,7 @@ class App extends React.Component {
 	constructor(props) {
 		super(props);
 		this.state = {
+			loading: false,
 			clean: true,
 			marked: true,
 			markedCPO: true,
@@ -28,14 +29,20 @@ class App extends React.Component {
 	}
 
 	componentDidMount() {
-		ipc.on("printed", (event, path) => {
-			console.log(path);
+		let counter = 0;
+
+		ipc.on("proof_made", (event, proofName) => {
+			counter++;
+			console.log(proofName);
+
+			if (counter == this.state.proofs.length) {
+				this.setState({ loading: false });
+			}
 		});
 	}
 
 	handleChange(event) {
 		let text = event.target.value;
-
 		this.setState({ level: text });
 	}
 
@@ -67,6 +74,7 @@ class App extends React.Component {
 
 	pdfOut() {
 		let location = "N:\\PDF\\out";
+		this.setState({ loading: true });
 
 		this.state.proofs.map(type => {
 			ipc.send("print-pdf", type, location);
@@ -87,7 +95,7 @@ class App extends React.Component {
 			.split("_")[1]
 			.split("x")[1];
 
-		let location = `C:\\${jobNumber}\\x${xNumber}`; //TODO: Change to M:\\ When ready for production
+		let location = `M:\\${jobNumber}\\x${xNumber}`; //TODO: Change to M:\\ When ready for production
 
 		fs.readdir(location, (err, files) => {
 			files.forEach(a => {
@@ -117,6 +125,8 @@ class App extends React.Component {
 				draftNumber++;
 
 				this.state.proofs.map(type => {
+					this.setState({ loading: true });
+
 					name = `${remote.getGlobal("jobNumber").substring(4)}_${company}_${type.charAt(0).toUpperCase() +
 						type.slice(1)}_Draft${draftNumber}`;
 
@@ -137,6 +147,18 @@ class App extends React.Component {
 	render() {
 		return (
 			<div>
+				{this.state.loading ? (
+					<div className="progress">
+						<div className="prog-text">Generating proofs...</div>
+						<div className="sk-folding-cube">
+							<div className="sk-cube1 sk-cube" />
+							<div className="sk-cube2 sk-cube" />
+							<div className="sk-cube4 sk-cube" />
+							<div className="sk-cube3 sk-cube" />
+						</div>
+					</div>
+				) : null}
+
 				<Titlebar />
 				<div className="main group">
 					<Checkbox checked={this.state.clean} change={this.toggle.bind(this, "clean")} label="clean" />
