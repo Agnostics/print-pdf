@@ -5,6 +5,8 @@ import "./style.scss";
 
 import Titlebar from "../components/Titlebar";
 import Checkbox from "../components/Checkbox";
+import Loading from "../components/Loading";
+
 import fs from "fs";
 
 import smalltalk from "smalltalk/legacy";
@@ -35,6 +37,7 @@ class App extends React.Component {
 		this.loadResults = this.loadResults.bind(this);
 		this.openFolder = this.openFolder.bind(this);
 		this.getLocation = this.getLocation.bind(this);
+		this.isValidChoices = this.isValidChoices.bind(this);
 	}
 
 	componentDidMount() {
@@ -54,15 +57,16 @@ class App extends React.Component {
 			counter++;
 			console.log(type);
 
+			if (counter == this.state.proofs.length) {
+				this.setState({ loading: false });
+				this.loadResults();
+				return;
+			}
+			//TODO: Fix, only creates cpolvl if marked is checked
 			if (this.state.proofs.includes("cpolvl") && type == "markedCPO") {
 				console.log("CHANGE THE LEVEL NOW !! ");
 
 				ipc.send("set-level", type, location, name);
-			}
-
-			if (counter == this.state.proofs.length) {
-				this.setState({ loading: false });
-				this.loadResults();
 			}
 		});
 	}
@@ -141,6 +145,17 @@ class App extends React.Component {
 			});
 	}
 
+	isValidChoices() {
+		if (this.state.proofs.includes("marklvl") && this.state.level > 0) {
+			return true;
+		} else if (this.state.proofs.includes("cpolvl") && this.state.level > 0) {
+			return true;
+		} else {
+			smalltalk.alert("Error", "Level must be specified...");
+			return false;
+		}
+	}
+
 	pdfOut() {
 		let location = "N:\\PDF\\out";
 		this.setState({ loading: true });
@@ -151,6 +166,8 @@ class App extends React.Component {
 	}
 
 	createPdf(overwrite, companyName) {
+		if (!this.isValidChoices()) return;
+
 		let company;
 		let draftNumber = 0;
 		let run = false;
@@ -197,8 +214,15 @@ class App extends React.Component {
 				this.state.proofs.map(type => {
 					this.setState({ loading: true });
 
-					name = `${remote.getGlobal("jobNumber").substring(4)}_${company}_${type.charAt(0).toUpperCase() +
-						type.slice(1)}_Draft${draftNumber}`;
+					let name;
+
+					if (type === "marklvl") {
+						name = `${remote.getGlobal("jobNumber").substring(4)}_${company}_Marked_${this.state.level}_Draft${draftNumber}`;
+					} else if (type === "marklvl") {
+						name = `${remote.getGlobal("jobNumber").substring(4)}_${company}_MarkedCPO_${this.state.level}_Draft${draftNumber}`;
+					} else {
+						name = `${remote.getGlobal("jobNumber").substring(4)}_${company}_${type.charAt(0).toUpperCase() + type.slice(1)}_Draft${draftNumber}`;
+					}
 
 					if (!fs.existsSync(`${location}\\${name}`)) {
 						ipc.send("print-pdf", type, location, name, this.state.level);
@@ -223,18 +247,7 @@ class App extends React.Component {
 	render() {
 		return (
 			<div>
-				{this.state.loading ? (
-					<div className="progress">
-						<div className="prog-text">Generating proofs...</div>
-						<div className="sk-folding-cube">
-							<div className="sk-cube1 sk-cube" />
-							<div className="sk-cube2 sk-cube" />
-							<div className="sk-cube4 sk-cube" />
-							<div className="sk-cube3 sk-cube" />
-						</div>
-					</div>
-				) : null}
-
+				{this.state.loading ? <Loading /> : null}
 				{this.state.results ? (
 					<div className="results">
 						<h1>

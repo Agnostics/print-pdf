@@ -7,11 +7,7 @@ let mainWindow;
 
 // Keep a reference for dev mode
 let dev = false;
-if (
-	process.defaultApp ||
-	/[\\/]electron-prebuilt[\\/]/.test(process.execPath) ||
-	/[\\/]electron[\\/]/.test(process.execPath)
-) {
+if (process.defaultApp || /[\\/]electron-prebuilt[\\/]/.test(process.execPath) || /[\\/]electron[\\/]/.test(process.execPath)) {
 	dev = true;
 }
 
@@ -133,4 +129,9 @@ ipcMain.on("print-pdf", (event, TYPE, LOCATION, NAME, LEVEL) => {
 
 ipcMain.on("set-level", function(event) {
 	//TODO: Create set-level logic
+	let ls = spawn("ping 127.1.0.0", [], { shell: true });
+
+	ls.on("close", function() {
+		event.sender.send("proof_made", "cpolvl");
+	});
 });
