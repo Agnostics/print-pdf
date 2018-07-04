@@ -15,6 +15,8 @@ if (
 	dev = true;
 }
 
+global.dev = dev;
+
 function createWindow() {
 	mainWindow = new BrowserWindow({
 		width: 250,
@@ -58,8 +60,13 @@ function createWindow() {
 }
 
 function getJobLocation() {
-	// const arg1 = process.argv[1];
-	const arg1 = "//sfphq-xppsrv01/XPP/SFP/alljobz/CLS_training/GRP_brandon/JOB_s001337x1_pom"; //TODO: Change back to other arg1 variable
+	let arg1;
+
+	if (dev) {
+		arg1 = "//sfphq-xppsrv01/XPP/SFP/alljobz/CLS_training/GRP_brandon/JOB_s001337x1_pom";
+	} else {
+		arg1 = process.argv[1]; //PROD: Use passed argv from XPP
+	}
 
 	let path = arg1.split("/");
 	path = path.slice(4, path.length);
@@ -98,24 +105,32 @@ ipcMain.on("print-pdf", (event, TYPE, LOCATION, NAME, LEVEL) => {
 
 	if (TYPE == "cpolvl") return;
 
-	console.log(`Processing: ${print_format[TYPE]}`);
+	if (dev) {
+		console.log(`Processing: ${print_format[TYPE]}`);
 
-	let ls = spawn("ping 127.1.0.0", [], { shell: true });
+		let ls = spawn("ping 127.1.0.0", [], { shell: true });
 
-	//TODO: Uncomment below for production
-	// let ls = spawn(print_format[TYPE], [], { shell: true, cwd: global.jobLocation });
+		ls.on("close", function() {
+			event.sender.send("proof_made", TYPE);
+		});
+	}
 
-	// ls.stdout.on("data", data => {
-	// 	event.sender.send("printed", `stdout: ${data}`);
-	// });
+	//PROD: Create PDF files
+	if (!dev) {
+		let ls = spawn(print_format[TYPE], [], { shell: true, cwd: global.jobLocation });
 
-	// ls.stderr.on("data", data => {
-	// 	console.log(`stderr: ${data}`);
-	// });
+		ls.stdout.on("data", data => {
+			event.sender.send("printed", `stdout: ${data}`);
+		});
 
-	ls.on("close", function() {
-		event.sender.send("proof_made", TYPE);
-	});
+		ls.stderr.on("data", data => {
+			console.log(`stderr: ${data}`);
+		});
+
+		ls.on("close", function() {
+			event.sender.send("proof_made", TYPE);
+		});
+	}
 });
 
 ipcMain.on("set-level", function(event) {});

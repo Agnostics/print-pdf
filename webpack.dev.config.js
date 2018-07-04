@@ -20,6 +20,10 @@ module.exports = {
 	module: {
 		rules: [
 			{
+				test: /\.css$/,
+				use: ["style-loader", "css-loader"]
+			},
+			{
 				test: /\.scss$/,
 				use: ["style-loader", "css-loader", "sass-loader"],
 				include: defaultInclude
@@ -38,7 +42,8 @@ module.exports = {
 				test: /\.(eot|svg|ttf|woff|woff2)$/,
 				use: [{ loader: "file-loader?name=font/[name]__[hash:base64:5].[ext]" }],
 				include: defaultInclude
-			}
+			},
+			{ test: /\.(png|woff|woff2|eot|ttf|svg)$/, loader: "url-loader?limit=100000" }
 		]
 	},
 	target: "electron-renderer",

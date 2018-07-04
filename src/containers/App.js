@@ -7,6 +7,8 @@ import Titlebar from "../components/Titlebar";
 import Checkbox from "../components/Checkbox";
 import fs from "fs";
 
+import smalltalk from "smalltalk/legacy";
+
 class App extends React.Component {
 	constructor(props) {
 		super(props);
@@ -106,6 +108,7 @@ class App extends React.Component {
 	}
 
 	getLocation() {
+		console.log(remote.getGlobal("jobNumber"));
 		let jobNumber = remote
 			.getGlobal("jobNumber")
 			.split("_")[1]
@@ -115,7 +118,13 @@ class App extends React.Component {
 			.split("_")[1]
 			.split("x")[1];
 
-		let location = `C:\\${jobNumber}\\x${xNumber}`; //TODO: Change to M:\\ When ready for production
+		//PROD: Use M drive to locate job
+		let location;
+		if (remote.getGlobal("dev")) {
+			location = `C:\\${jobNumber}\\x${xNumber}`;
+		} else {
+			location = `M:\\${jobNumber}\\x${xNumber}`;
+		}
 		this.setState({ location });
 	}
 
@@ -124,23 +133,14 @@ class App extends React.Component {
 	}
 
 	overwrite() {
-		remote.dialog.showMessageBox(
-			remote.getCurrentWindow(),
-			{
-				title: "Overwrite proofs",
-				type: "question",
-				message: "Are you sure you want to overwrite existing proofs?",
-				cancelId: 69,
-				buttons: ["yes", "no"]
-			},
-			call => {
-				if (call == 0) {
-					this.createPdf(true);
-				} else {
-					console.log("YIIKES ABORT");
-				}
-			}
-		);
+		smalltalk
+			.confirm("Overwrite", "Are you sure?")
+			.then(() => {
+				this.createPdf(true);
+			})
+			.catch(() => {
+				console.log("no");
+			});
 	}
 
 	pdfOut() {
@@ -152,27 +152,31 @@ class App extends React.Component {
 		});
 	}
 
-	createPdf(overwrite) {
-		let company = "";
+	createPdf(overwrite, companyName) {
+		let company;
 		let draftNumber = 0;
 		let run = false;
 
-		console.log(overwrite);
+		if (typeof companyName == "string") {
+			company = companyName;
+		}
 
 		let location = this.state.location;
 
 		fs.readdir(location, (err, files) => {
+			if (err) return;
+
 			files.forEach(a => {
 				if (a.indexOf(".pdf") > -1) run = true;
 			});
 
-			if (run) {
+			if (company !== undefined || run) {
 				files.forEach(file => {
 					let temp = file.split(".");
 
 					if (temp[1] === "pdf") {
 						if (temp[0].split("_").length > 4) {
-							company = temp[0].split("_")[2];
+							if (companyName !== undefined || overwrite) company = temp[0].split("_")[2];
 
 							let tempDraft = temp[0].split("_");
 							tempDraft = tempDraft[tempDraft.length - 1].substring(5);
@@ -200,14 +204,20 @@ class App extends React.Component {
 
 					if (!fs.existsSync(`${location}\\${name}`)) {
 						ipc.send("print-pdf", type, location, name, this.state.level);
-					} else {
-						console.log("SAME DRAFT # - WUT");
-						//TODO: Handle error
 					}
 				});
 			} else {
 				console.log("NEED COMPANY NAME");
-				//TODO: Setup company name prompt
+
+				smalltalk
+					.prompt("No PDFs found", "Enter company's name", "")
+					.then(value => {
+						this.createPdf(false, value);
+						console.log(value);
+					})
+					.catch(() => {
+						console.log("cancel");
+					});
 			}
 		});
 	}

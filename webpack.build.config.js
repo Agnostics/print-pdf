@@ -28,6 +28,13 @@ module.exports = {
 					use: ["css-loader", "sass-loader"]
 				})
 			},
+			{
+				test: /\.css$/,
+				use: ExtractTextPlugin.extract({
+					fallback: "style-loader",
+					use: "css-loader"
+				})
+			},
 
 			{
 				test: /\.jsx?$/,
@@ -42,7 +49,13 @@ module.exports = {
 			{
 				test: /\.woff(2)?(\?v=[0-9]\.[0-9]\.[0-9])?$/,
 				loader: "url-loader?limit=10000&mimetype=application/font-woff"
-			}
+			},
+			{
+				test: /\.(eot|svg|ttf|woff|woff2)$/,
+				use: [{ loader: "file-loader?name=font/[name]__[hash:base64:5].[ext]" }],
+				include: defaultInclude
+			},
+			{ test: /\.(png|woff|woff2|eot|ttf|svg)$/, loader: "url-loader?limit=100000" }
 		]
 	},
 	target: "electron-renderer",

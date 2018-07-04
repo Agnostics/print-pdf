@@ -16,9 +16,11 @@
 .btns {
 	text-align: center;
 	margin: 0 auto;
+	width: 100%;
+	display: inline-block;
 
 	button {
-		margin: 0 10px;
+		margin: 0 8px;
 		width: 100px;
 		height: 30px;
 		background-color: #414141;
