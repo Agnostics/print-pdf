@@ -72,9 +72,7 @@ function getJobLocation() {
 	path = path.slice(4, path.length);
 
 	global.jobNumber = path[path.length - 1];
-
 	path = path.join("\\");
-
 	global.jobLocation = "N:\\" + path; //"N:\\SFP\\alljobz\\CLS_training\\GRP_brandon\\JOB_s001334x1_training"
 }
 
@@ -133,4 +131,6 @@ ipcMain.on("print-pdf", (event, TYPE, LOCATION, NAME, LEVEL) => {
 	}
 });
 
-ipcMain.on("set-level", function(event) {});
+ipcMain.on("set-level", function(event) {
+	//TODO: Create set-level logic
+});

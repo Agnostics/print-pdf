@@ -104,11 +104,9 @@ class App extends React.Component {
 
 	openFolder() {
 		shell.openItem(this.state.location);
-		console.log(this.state.location);
 	}
 
 	getLocation() {
-		console.log(remote.getGlobal("jobNumber"));
 		let jobNumber = remote
 			.getGlobal("jobNumber")
 			.split("_")[1]
@@ -249,7 +247,7 @@ class App extends React.Component {
 					</div>
 				) : null}
 
-				<Titlebar job={this.state.job} />
+				<Titlebar job={remote.getGlobal("jobNumber")} />
 				<div className="main group">
 					<Checkbox checked={this.state.clean} change={this.toggle.bind(this, "clean")} label="clean" />
 					<Checkbox checked={this.state.marked} change={this.toggle.bind(this, "marked")} label="marked" />
