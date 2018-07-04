@@ -1,5 +1,5 @@
 import React, { Component } from "react";
-import { ipcRenderer as ipc, remote } from "electron";
+import { ipcRenderer as ipc, remote, shell } from "electron";
 import "./global.scss";
 import "./style.scss";
 
@@ -12,6 +12,7 @@ class App extends React.Component {
 		super(props);
 		this.state = {
 			loading: false,
+			results: false,
 			clean: true,
 			marked: true,
 			markedCPO: true,
@@ -19,24 +20,47 @@ class App extends React.Component {
 			marklvl: false,
 			cpolvl: false,
 			level: "",
+			job: "",
+			location: "",
 			proofs: ["clean", "marked", "markedCPO"]
 		};
 
 		this.handleChange = this.handleChange.bind(this);
 		this.handleLevel = this.handleLevel.bind(this);
 		this.pdfOut = this.pdfOut.bind(this);
-		this.updatePdf = this.updatePdf.bind(this);
+		this.overwrite = this.overwrite.bind(this);
+		this.createPdf = this.createPdf.bind(this);
+		this.loadResults = this.loadResults.bind(this);
+		this.openFolder = this.openFolder.bind(this);
+		this.getLocation = this.getLocation.bind(this);
 	}
 
 	componentDidMount() {
+		if (remote.getGlobal("jobNumber") != null) {
+			let jobNumber = remote
+				.getGlobal("jobNumber")
+				.split("_")[1]
+				.split("x")[0];
+
+			this.setState({ job: jobNumber });
+			this.getLocation();
+		}
+
 		let counter = 0;
 
-		ipc.on("proof_made", (event, proofName) => {
+		ipc.on("proof_made", (event, type) => {
 			counter++;
-			console.log(proofName);
+			console.log(type);
+
+			if (this.state.proofs.includes("cpolvl") && type == "markedCPO") {
+				console.log("CHANGE THE LEVEL NOW !! ");
+
+				ipc.send("set-level", type, location, name);
+			}
 
 			if (counter == this.state.proofs.length) {
 				this.setState({ loading: false });
+				this.loadResults();
 			}
 		});
 	}
@@ -72,20 +96,16 @@ class App extends React.Component {
 		this.setState({ [state]: !this.state[state], proofs: newProofs });
 	}
 
-	pdfOut() {
-		let location = "N:\\PDF\\out";
-		this.setState({ loading: true });
-
-		this.state.proofs.map(type => {
-			ipc.send("print-pdf", type, location);
-		});
+	loadResults() {
+		this.setState({ results: true });
 	}
 
-	updatePdf() {
-		let company = "";
-		let draftNumber = "";
-		let run = false;
+	openFolder() {
+		shell.openItem(this.state.location);
+		console.log(this.state.location);
+	}
 
+	getLocation() {
 		let jobNumber = remote
 			.getGlobal("jobNumber")
 			.split("_")[1]
@@ -95,7 +115,51 @@ class App extends React.Component {
 			.split("_")[1]
 			.split("x")[1];
 
-		let location = `M:\\${jobNumber}\\x${xNumber}`; //TODO: Change to M:\\ When ready for production
+		let location = `C:\\${jobNumber}\\x${xNumber}`; //TODO: Change to M:\\ When ready for production
+		this.setState({ location });
+	}
+
+	refreshWindow() {
+		remote.getCurrentWindow().reload();
+	}
+
+	overwrite() {
+		remote.dialog.showMessageBox(
+			remote.getCurrentWindow(),
+			{
+				title: "Overwrite proofs",
+				type: "question",
+				message: "Are you sure you want to overwrite existing proofs?",
+				cancelId: 69,
+				buttons: ["yes", "no"]
+			},
+			call => {
+				if (call == 0) {
+					this.createPdf(true);
+				} else {
+					console.log("YIIKES ABORT");
+				}
+			}
+		);
+	}
+
+	pdfOut() {
+		let location = "N:\\PDF\\out";
+		this.setState({ loading: true });
+
+		this.state.proofs.map(type => {
+			ipc.send("print-pdf", type, location, "", this.state.level);
+		});
+	}
+
+	createPdf(overwrite) {
+		let company = "";
+		let draftNumber = 0;
+		let run = false;
+
+		console.log(overwrite);
+
+		let location = this.state.location;
 
 		fs.readdir(location, (err, files) => {
 			files.forEach(a => {
@@ -109,20 +173,24 @@ class App extends React.Component {
 					if (temp[1] === "pdf") {
 						if (temp[0].split("_").length > 4) {
 							company = temp[0].split("_")[2];
-							draftNumber = temp[0].split("_");
-							draftNumber = draftNumber[draftNumber.length - 1].substring(5);
 
-							fs.rename(`${location}\\${file}`, `${location}\\Old PDF\\${file}`, err => {
-								if (err) {
-									console.log(err);
-									return;
-								}
-							});
+							let tempDraft = temp[0].split("_");
+							tempDraft = tempDraft[tempDraft.length - 1].substring(5);
+
+							if (draftNumber < tempDraft) draftNumber = tempDraft;
+
+							if (!overwrite)
+								fs.rename(`${location}\\${file}`, `${location}\\Old PDF\\${file}`, err => {
+									if (err) {
+										console.log(err);
+										return;
+									}
+								});
 						}
 					}
 				});
 
-				draftNumber++;
+				if (!overwrite) draftNumber++;
 
 				this.state.proofs.map(type => {
 					this.setState({ loading: true });
@@ -131,7 +199,7 @@ class App extends React.Component {
 						type.slice(1)}_Draft${draftNumber}`;
 
 					if (!fs.existsSync(`${location}\\${name}`)) {
-						ipc.send("print-pdf", type, location, name);
+						ipc.send("print-pdf", type, location, name, this.state.level);
 					} else {
 						console.log("SAME DRAFT # - WUT");
 						//TODO: Handle error
@@ -159,7 +227,19 @@ class App extends React.Component {
 					</div>
 				) : null}
 
-				<Titlebar />
+				{this.state.results ? (
+					<div className="results">
+						<h1>
+							Proofs have<br /> been created.
+						</h1>
+						<div className="btns">
+							<button onClick={this.refreshWindow}>remake</button>
+							<button onClick={this.openFolder}>view</button>
+						</div>
+					</div>
+				) : null}
+
+				<Titlebar job={this.state.job} />
 				<div className="main group">
 					<Checkbox checked={this.state.clean} change={this.toggle.bind(this, "clean")} label="clean" />
 					<Checkbox checked={this.state.marked} change={this.toggle.bind(this, "marked")} label="marked" />
@@ -182,8 +262,9 @@ class App extends React.Component {
 					</div>
 				</div>
 				<div className="btns">
-					<button onClick={this.pdfOut}>pdf out</button>
-					<button onClick={this.updatePdf}>update</button>
+					{/* <button onClick={this.pdfOut}>pdf out</button> */}
+					<button onClick={this.overwrite}>overwrite</button>
+					<button onClick={this.createPdf.bind(this, false)}>update</button>
 				</div>
 			</div>
 		);

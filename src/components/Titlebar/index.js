@@ -9,7 +9,7 @@ const closeWindow = () => {
 const Titlebar = props => {
 	return (
 		<div id="titlebar">
-			<div className="job-number">s002384x1</div>
+			<div className="job-number">{props.job || "Job not found"}</div>
 			<div className="close-btn" onClick={closeWindow}>
 				x
 			</div>

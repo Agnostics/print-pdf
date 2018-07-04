@@ -58,8 +58,8 @@ function createWindow() {
 }
 
 function getJobLocation() {
-	const arg1 = process.argv[1];
-	// const arg1 = "//sfphq-xppsrv01/XPP/SFP/alljobz/CLS_training/GRP_brandon/JOB_s001337x1_pom"; //TODO: Change back to other arg1 variable
+	// const arg1 = process.argv[1];
+	const arg1 = "//sfphq-xppsrv01/XPP/SFP/alljobz/CLS_training/GRP_brandon/JOB_s001337x1_pom"; //TODO: Change back to other arg1 variable
 
 	let path = arg1.split("/");
 	path = path.slice(4, path.length);
@@ -85,32 +85,37 @@ app.on("activate", () => {
 	}
 });
 
-ipcMain.on("print-pdf", function(event, TYPE, LOCATION, NAME) {
+ipcMain.on("print-pdf", (event, TYPE, LOCATION, NAME, LEVEL) => {
 	if (NAME == null) NAME = `${global.jobNumber}_${TYPE}_${Math.floor(Math.random() * 1010)}`;
 
 	const print_format = {
 		clean: `psfmtdrv -job -nhdr -df ${LOCATION} -pn ${NAME} -pdfmark -distill -pdfusegs -efd1 -frames`,
 		marked: `psfmtdrv -job -nhdr -df ${LOCATION} -pn ${NAME} -pdfmark -distill -pdfusegs -efd1 -frames -mkta 0`,
 		markedCPO: `cap psfmtdrv -job -nhdr -cap -df ${LOCATION} -pn ${NAME} -pdfmark -distill -pdfusegs -efd1 -frames -mkta 0`,
-		cumulative: `psfmtdrv -job -nhdr -df ${LOCATION} -pn ${NAME} -pdfmark -distill -pdfusegs -efd1 -frames -mkta baseline`
+		cumulative: `psfmtdrv -job -nhdr -df ${LOCATION} -pn ${NAME} -pdfmark -distill -pdfusegs -efd1 -frames -mkta baseline`,
+		marklvl: `psfmtdrv -job -nhdr -df ${LOCATION} -pn ${NAME} -pdfmark -distill -pdfusegs -efd1 -frames -mkta ${LEVEL}`
 	};
+
+	if (TYPE == "cpolvl") return;
 
 	console.log(`Processing: ${print_format[TYPE]}`);
 
-	// let ls = spawn("ping 127.1.0.0", [], { shell: true });
+	let ls = spawn("ping 127.1.0.0", [], { shell: true });
 
 	//TODO: Uncomment below for production
-	let ls = spawn(print_format[TYPE], [], { shell: true, cwd: global.jobLocation });
+	// let ls = spawn(print_format[TYPE], [], { shell: true, cwd: global.jobLocation });
 
-	ls.stdout.on("data", data => {
-		event.sender.send("printed", `stdout: ${data}`);
-	});
+	// ls.stdout.on("data", data => {
+	// 	event.sender.send("printed", `stdout: ${data}`);
+	// });
 
-	ls.stderr.on("data", data => {
-		console.log(`stderr: ${data}`);
-	});
+	// ls.stderr.on("data", data => {
+	// 	console.log(`stderr: ${data}`);
+	// });
 
 	ls.on("close", function() {
-		event.sender.send("proof_made", `Finished ${NAME}`);
+		event.sender.send("proof_made", TYPE);
 	});
 });
+
+ipcMain.on("set-level", function(event) {});
