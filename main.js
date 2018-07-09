@@ -86,7 +86,7 @@ app.on("activate", () => {
 	}
 });
 
-ipcMain.on("print-pdf", (event, TYPE, LOCATION, NAME, LEVEL) => {
+ipcMain.on("print-pdf", (event, TYPE, LOCATION, NAME, LEVEL, isAlone) => {
 	if (NAME == null) NAME = `${global.jobNumber}_${TYPE}_${Math.floor(Math.random() * 1010)}`;
 
 	const print_format = {
@@ -97,15 +97,19 @@ ipcMain.on("print-pdf", (event, TYPE, LOCATION, NAME, LEVEL) => {
 		marklvl: `psfmtdrv -job -nhdr -df ${LOCATION} -pn ${NAME} -pdfmark -distill -pdfusegs -efd1 -frames -mkta ${LEVEL}`
 	};
 
-	if (TYPE == "cpolvl") return;
+	if (TYPE == "cpolvl" && isAlone) {
+		event.sender.send("make_cpo_lvl", "cpolvl");
+		return;
+	} else if (TYPE == "cpolvl") return;
 
 	if (dev) {
 		console.log(`Processing: ${print_format[TYPE]}`);
 
 		let ls = spawn("ping 127.1.0.0", [], { shell: true });
 
-		ls.on("close", function() {
-			event.sender.send("proof_made", TYPE);
+		ls.on("close", code => {
+			if (code == 0) event.sender.send("proof_made", TYPE);
+			if (code > 0) event.sender.send("proof_made", "err");
 		});
 	}
 
@@ -113,25 +117,31 @@ ipcMain.on("print-pdf", (event, TYPE, LOCATION, NAME, LEVEL) => {
 	if (!dev) {
 		let ls = spawn(print_format[TYPE], [], { shell: true, cwd: global.jobLocation });
 
-		ls.stdout.on("data", data => {
-			event.sender.send("printed", `stdout: ${data}`);
-		});
-
 		ls.stderr.on("data", data => {
 			console.log(`stderr: ${data}`);
 		});
 
-		ls.on("close", function() {
-			event.sender.send("proof_made", TYPE);
+		ls.on("close", code => {
+			if (code === 0) event.sender.send("proof_made", TYPE);
 		});
 	}
 });
 
-ipcMain.on("set-level", function(event) {
-	//TODO: Create set-level logic
+ipcMain.on("set-level", (event, lvl) => {
 	let ls = spawn("ping 127.1.0.0", [], { shell: true });
+	// let ls = spawn("ipcse", [], { shell: true });
+	console.log(`LEVEL SET: ${global.jobNumber.substring(4)}_Level${lvl}`);
+	console.log(global.jobLocation);
 
-	ls.on("close", function() {
-		event.sender.send("proof_made", "cpolvl");
+	//M:\\BaselineBackup\\s002286x1_drs_Level020\\*Tbaseline
+	//N:\\SFP\\alljobz\\CLS_training\\GRP_brandon\\JOB_s001334x1_training {global.jobLocation}
+
+	ls.stderr.on("data", data => {
+		console.log(`stderr: ${data}`);
+	});
+
+	ls.on("close", code => {
+		if (code == 0) event.sender.send("proof_made", "cpolvl");
+		if (code > 0) event.sender.send("proof_made", "err");
 	});
 });

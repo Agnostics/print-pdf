@@ -53,20 +53,30 @@ class App extends React.Component {
 
 		let counter = 0;
 
+		ipc.on("make_cpo_lvl", event => {
+			ipc.send("set-level", this.state.level);
+		});
+
 		ipc.on("proof_made", (event, type) => {
 			counter++;
-			console.log(type);
-
-			if (counter == this.state.proofs.length) {
-				this.setState({ loading: false });
+			if (type == "err") {
+				console.log(`Error: ${type}`);
 				this.loadResults();
 				return;
 			}
-			//TODO: Fix, only creates cpolvl if marked is checked
-			if (this.state.proofs.includes("cpolvl") && type == "markedCPO") {
-				console.log("CHANGE THE LEVEL NOW !! ");
 
-				ipc.send("set-level", type, location, name);
+			console.log(`Proof Created: ${type}`);
+
+			if (counter == this.state.proofs.length) {
+				this.loadResults();
+				return;
+			}
+
+			if (this.state.proofs.includes("cpolvl")) {
+				if (counter == this.state.proofs.length - 1) {
+					ipc.send("set-level", this.state.level);
+					return;
+				}
 			}
 		});
 	}
@@ -103,7 +113,7 @@ class App extends React.Component {
 	}
 
 	loadResults() {
-		this.setState({ results: true });
+		this.setState({ results: true, loading: false });
 	}
 
 	openFolder() {
@@ -141,18 +151,28 @@ class App extends React.Component {
 				this.createPdf(true);
 			})
 			.catch(() => {
-				console.log("no");
+				console.log("Option: no");
 			});
 	}
 
 	isValidChoices() {
-		if (this.state.proofs.includes("marklvl") && this.state.level > 0) {
-			return true;
-		} else if (this.state.proofs.includes("cpolvl") && this.state.level > 0) {
-			return true;
-		} else {
-			smalltalk.alert("Error", "Level must be specified...");
+		let proofs = this.state.proofs;
+
+		if (this.state.proofs.includes("cpolvl")) {
+			const index = proofs.indexOf("cpolvl");
+			proofs.splice(index, 1);
+			proofs.push("cpolvl");
+			this.setState({ proofs });
+		}
+
+		if (this.state.proofs.includes("marklvl") && this.state.level < 1) {
+			smalltalk.alert("Error", "Level must be specified.");
 			return false;
+		} else if (this.state.proofs.includes("cpolvl") && this.state.level < 1) {
+			smalltalk.alert("Error", "Level must be specified.");
+			return false;
+		} else {
+			return true;
 		}
 	}
 
@@ -167,6 +187,8 @@ class App extends React.Component {
 
 	createPdf(overwrite, companyName) {
 		if (!this.isValidChoices()) return;
+
+		console.log(this.state.proofs);
 
 		let company;
 		let draftNumber = 0;
@@ -225,20 +247,24 @@ class App extends React.Component {
 					}
 
 					if (!fs.existsSync(`${location}\\${name}`)) {
-						ipc.send("print-pdf", type, location, name, this.state.level);
+						if (this.state.proofs.includes("cpolvl") && this.state.proofs.length == 1) {
+							ipc.send("print-pdf", type, location, name, this.state.level, true);
+						} else {
+							ipc.send("print-pdf", type, location, name, this.state.level, false);
+						}
 					}
 				});
 			} else {
-				console.log("NEED COMPANY NAME");
+				console.log("Requires company name");
 
 				smalltalk
-					.prompt("No PDFs found", "Enter company's name", "")
+					.prompt("No PDFs found", "Enter company's name")
 					.then(value => {
 						this.createPdf(false, value);
-						console.log(value);
+						console.log(`Company name: ${value}`);
 					})
-					.catch(() => {
-						console.log("cancel");
+					.catch(err => {
+						console.log(err);
 					});
 			}
 		});
@@ -275,6 +301,7 @@ class App extends React.Component {
 						<input
 							id="set-lvl"
 							type="number"
+							min="0"
 							placeholder="enter level"
 							value={this.state.level}
 							onChange={this.handleChange}
