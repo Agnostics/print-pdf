@@ -25,6 +25,8 @@ class App extends React.Component {
 			cpolvl: false,
 			level: "",
 			job: "",
+			companyName: "",
+			draftNumber: 1,
 			location: "",
 			proofs: ["clean", "marked", "markedCPO"]
 		};
@@ -53,28 +55,39 @@ class App extends React.Component {
 
 		let counter = 0;
 
-		ipc.on("make_cpo_lvl", event => {
-			ipc.send("set-level", this.state.level);
+		ipc.on("debug", (event, info) => {
+			console.log(info);
 		});
 
-		ipc.on("proof_made", (event, type) => {
+		ipc.on("make_cpo_lvl", (event, type, location, name) => {
+			ipc.send("set-level", location, name, this.state.level);
+		});
+
+		ipc.on("proof_made", (event, type, err) => {
 			counter++;
-			if (type == "err") {
-				console.log(`Error: ${type}`);
-				this.loadResults();
-				return;
+
+			if (err) {
+				smalltalk.alert("Error", type.toString());
+			} else {
+				console.log(`Proof Created: ${type}`);
 			}
 
-			console.log(`Proof Created: ${type}`);
-
 			if (counter == this.state.proofs.length) {
-				this.loadResults();
+				this.loadResults(err);
 				return;
 			}
 
 			if (this.state.proofs.includes("cpolvl")) {
 				if (counter == this.state.proofs.length - 1) {
-					ipc.send("set-level", this.state.level);
+					if (this.state.level == "001") {
+						name = `${remote.getGlobal("jobNumber").substring(4)}_${this.state.companyName}_CumulativeCPO_Draft${this.state.draftNumber}`;
+					} else {
+						name = `${remote.getGlobal("jobNumber").substring(4)}_${this.state.companyName}_MarkedCPO_${this.state.level}_Draft${
+							this.state.draftNumber
+						}`;
+					}
+
+					ipc.send("set-level", this.state.location, name, this.state.level);
 					return;
 				}
 			}
@@ -112,7 +125,8 @@ class App extends React.Component {
 		this.setState({ [state]: !this.state[state], proofs: newProofs });
 	}
 
-	loadResults() {
+	loadResults(isErr) {
+		if (isErr) console.log("ABORT MISSION");
 		this.setState({ results: true, loading: false });
 	}
 
@@ -188,8 +202,6 @@ class App extends React.Component {
 	createPdf(overwrite, companyName) {
 		if (!this.isValidChoices()) return;
 
-		console.log(this.state.proofs);
-
 		let company;
 		let draftNumber = 0;
 		let run = false;
@@ -233,6 +245,8 @@ class App extends React.Component {
 
 				if (!overwrite) draftNumber++;
 
+				this.setState({ companyName: company, draftNumber });
+
 				this.state.proofs.map(type => {
 					this.setState({ loading: true });
 
@@ -240,8 +254,14 @@ class App extends React.Component {
 
 					if (type === "marklvl") {
 						name = `${remote.getGlobal("jobNumber").substring(4)}_${company}_Marked_${this.state.level}_Draft${draftNumber}`;
-					} else if (type === "marklvl") {
-						name = `${remote.getGlobal("jobNumber").substring(4)}_${company}_MarkedCPO_${this.state.level}_Draft${draftNumber}`;
+					} else if (type === "cpolvl") {
+						if (this.state.level == "001") {
+							name = `${remote.getGlobal("jobNumber").substring(4)}_${this.state.companyName}_CumulativeCPO_Draft${this.state.draftNumber}`;
+						} else {
+							name = `${remote.getGlobal("jobNumber").substring(4)}_${this.state.companyName}_MarkedCPO_${this.state.level}_Draft${
+								this.state.draftNumber
+							}`;
+						}
 					} else {
 						name = `${remote.getGlobal("jobNumber").substring(4)}_${company}_${type.charAt(0).toUpperCase() + type.slice(1)}_Draft${draftNumber}`;
 					}

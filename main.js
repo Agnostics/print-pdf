@@ -1,4 +1,4 @@
-const { app, BrowserWindow, ipcMain } = require("electron");
+const { app, BrowserWindow, ipcMain, globalShortcut } = require("electron");
 const path = require("path");
 const url = require("url");
 const { spawn } = require("child_process");
@@ -43,9 +43,6 @@ function createWindow() {
 
 	mainWindow.once("ready-to-show", () => {
 		mainWindow.show();
-		if (dev) {
-			mainWindow.webContents.openDevTools();
-		}
 	});
 
 	mainWindow.on("closed", function() {
@@ -72,7 +69,12 @@ function getJobLocation() {
 	global.jobLocation = "N:\\" + path; //"N:\\SFP\\alljobz\\CLS_training\\GRP_brandon\\JOB_s001334x1_training"
 }
 
-app.on("ready", createWindow);
+app.on("ready", () => {
+	createWindow();
+	globalShortcut.register("Control+`", () => {
+		mainWindow.webContents.openDevTools({ mode: "detach" });
+	});
+});
 
 app.on("window-all-closed", () => {
 	if (process.platform !== "darwin") {
@@ -98,18 +100,26 @@ ipcMain.on("print-pdf", (event, TYPE, LOCATION, NAME, LEVEL, isAlone) => {
 	};
 
 	if (TYPE == "cpolvl" && isAlone) {
-		event.sender.send("make_cpo_lvl", "cpolvl");
+		event.sender.send("make_cpo_lvl", "cpolvl", LOCATION, NAME);
 		return;
-	} else if (TYPE == "cpolvl") return;
+	}
+
+	if (TYPE == "cpolvl") {
+		return;
+	}
+
+	event.sender.send("debug", `Processing: ${print_format[TYPE]}`);
 
 	if (dev) {
-		console.log(`Processing: ${print_format[TYPE]}`);
-
 		let ls = spawn("ping 127.1.0.0", [], { shell: true });
 
+		ls.stderr.on("data", data => {
+			event.sender.send("debug", `${TYPE} Error: ${data}`);
+			event.sender.send("proof_made", data, true);
+		});
+
 		ls.on("close", code => {
-			if (code == 0) event.sender.send("proof_made", TYPE);
-			if (code > 0) event.sender.send("proof_made", "err");
+			if (code == 0) event.sender.send("proof_made", TYPE, false);
 		});
 	}
 
@@ -118,30 +128,84 @@ ipcMain.on("print-pdf", (event, TYPE, LOCATION, NAME, LEVEL, isAlone) => {
 		let ls = spawn(print_format[TYPE], [], { shell: true, cwd: global.jobLocation });
 
 		ls.stderr.on("data", data => {
-			console.log(`stderr: ${data}`);
+			event.sender.send("debug", `${TYPE} Error: ${data}`);
+			event.sender.send("proof_made", data, true);
 		});
 
 		ls.on("close", code => {
-			if (code === 0) event.sender.send("proof_made", TYPE);
+			if (code == 0) event.sender.send("proof_made", TYPE, false);
 		});
 	}
 });
 
-ipcMain.on("set-level", (event, lvl) => {
-	let ls = spawn("ping 127.1.0.0", [], { shell: true });
-	// let ls = spawn("ipcse", [], { shell: true });
-	console.log(`LEVEL SET: ${global.jobNumber.substring(4)}_Level${lvl}`);
-	console.log(global.jobLocation);
+ipcMain.on("set-level", (event, LOCATION, NAME, LEVEL) => {
+	let ls;
 
-	//M:\\BaselineBackup\\s002286x1_drs_Level020\\*Tbaseline
-	//N:\\SFP\\alljobz\\CLS_training\\GRP_brandon\\JOB_s001334x1_training {global.jobLocation}
+	if (!dev) {
+		ls = spawn(`xcopy ${global.jobNumber.substring(4)}_Level${LEVEL}\\*Tbaseline "${global.jobLocation}" /e /i /u`, [], {
+			shell: true,
+			cwd: "M:\\BaselineBackup"
+		});
+	}
+
+	if (dev) {
+		ls = spawn("ping 127.1.0.0", [], { shell: true });
+	}
+
+	event.sender.send("debug", `Restoring level: ${LEVEL}`);
 
 	ls.stderr.on("data", data => {
-		console.log(`stderr: ${data}`);
+		event.sender.send("proof_made", `Error restoring level: ${data}`, true);
 	});
 
+	ls.stdout.on("data", data => {
+		event.sender.send("debug", data.toString());
+	});
+
+	ls.stdin.write("a");
+
 	ls.on("close", code => {
-		if (code == 0) event.sender.send("proof_made", "cpolvl");
-		if (code > 0) event.sender.send("proof_made", "err");
+		ls.stdin.end();
+		if (code == 0) {
+			event.sender.send("debug", `Level ${LEVEL} sucessfully restored.`);
+
+			if (!dev) {
+				let print = spawn(`cap psfmtdrv -job -nhdr -cap -df ${LOCATION} -pn ${NAME} -pdfmark -distill -pdfusegs -efd1 -frames -mkta 0`, [], {
+					shell: true,
+					cwd: global.jobLocation
+				});
+
+				print.on("close", code => {
+					if (code == 0) event.sender.send("proof_made", "cpolvl", false);
+				});
+
+				print.stderr.on("data", data => {
+					event.sender.send("debug", `Error: ${data}`);
+					event.sender.send("proof_made", data, true);
+					return;
+				});
+			}
+
+			if (dev) {
+				let print = spawn("pingz 127.1.0.0", [], { shell: true });
+
+				print.on("close", code => {
+					if (code == 0) event.sender.send("proof_made", "cpolvl", false);
+				});
+
+				print.stderr.on("data", data => {
+					event.sender.send("debug", `Error: ${data}`);
+					event.sender.send("proof_made", data, true);
+					return;
+				});
+			}
+
+			event.sender.send(
+				"debug",
+				`Processing: cap psfmtdrv -job -nhdr -cap -df ${LOCATION} -pn ${NAME} -pdfmark -distill -pdfusegs -efd1 -frames -mkta 0`
+			);
+		} else {
+			console.log("DONE BUT WITH CODE: " + code);
+		}
 	});
 });
