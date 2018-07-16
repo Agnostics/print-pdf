@@ -56,6 +56,10 @@ class App extends React.Component {
 		let counter = 0;
 
 		ipc.on("debug", (event, info) => {
+			if (info == "Div files in use - Waiting") {
+				smalltalk.alert("Error", "Div files in use - Close to proceed");
+			}
+
 			console.log(info);
 		});
 

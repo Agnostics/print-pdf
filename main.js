@@ -132,6 +132,10 @@ ipcMain.on("print-pdf", (event, TYPE, LOCATION, NAME, LEVEL, isAlone) => {
 			event.sender.send("proof_made", data, true);
 		});
 
+		ls.stdout.on("data", data => {
+			event.sender.send("debug", data.toString());
+		});
+
 		ls.on("close", code => {
 			if (code == 0) event.sender.send("proof_made", TYPE, false);
 		});
