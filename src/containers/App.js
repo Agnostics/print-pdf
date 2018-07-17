@@ -28,6 +28,10 @@ class App extends React.Component {
 			companyName: "",
 			draftNumber: 1,
 			location: "",
+			currentDraft: 0,
+			nextDraft: 0,
+			isHoveredOverwrite: false,
+			isHoveredUpdate: false,
 			proofs: ["clean", "marked", "markedCPO"]
 		};
 
@@ -40,6 +44,10 @@ class App extends React.Component {
 		this.openFolder = this.openFolder.bind(this);
 		this.getLocation = this.getLocation.bind(this);
 		this.isValidChoices = this.isValidChoices.bind(this);
+		this.hoveredOverwrite = this.hoveredOverwrite.bind(this);
+
+		this.hoveredUpdate = this.hoveredUpdate.bind(this);
+		this.getDraft = this.getDraft.bind(this);
 	}
 
 	componentDidMount() {
@@ -50,13 +58,14 @@ class App extends React.Component {
 				.split("x")[0];
 
 			this.setState({ job: jobNumber });
+
 			this.getLocation();
 		}
 
 		let counter = 0;
 
 		ipc.on("debug", (event, info) => {
-			if (info == "Div files in use - Waiting") {
+			if (info.includes("Div files in use")) {
 				smalltalk.alert("Error", "Div files in use - Close to proceed");
 			}
 
@@ -155,6 +164,9 @@ class App extends React.Component {
 		} else {
 			location = `M:\\${jobNumber}\\x${xNumber}`;
 		}
+
+		this.getDraft(location);
+
 		this.setState({ location });
 	}
 
@@ -192,6 +204,31 @@ class App extends React.Component {
 		} else {
 			return true;
 		}
+	}
+
+	getDraft(location) {
+		let draftNumber = 0;
+
+		fs.readdir(location, (err, files) => {
+			if (err) return;
+			files.forEach(file => {
+				let temp = file.split(".");
+
+				if (temp[1] === "pdf") {
+					if (temp[0].split("_").length > 4) {
+						let tempDraft = temp[0].split("_");
+						tempDraft = tempDraft[tempDraft.length - 1].substring(5);
+						draftNumber = tempDraft;
+						if (draftNumber < tempDraft) draftNumber = tempDraft;
+					}
+				}
+			});
+
+			let nextDraft = parseInt(draftNumber);
+			nextDraft++;
+
+			this.setState({ currentDraft: draftNumber, nextDraft: nextDraft });
+		});
 	}
 
 	pdfOut() {
@@ -294,6 +331,18 @@ class App extends React.Component {
 		});
 	}
 
+	hoveredOverwrite() {
+		this.setState({
+			isHoveredOverwrite: !this.state.isHoveredOverwrite
+		});
+	}
+
+	hoveredUpdate() {
+		this.setState({
+			isHoveredUpdate: !this.state.isHoveredUpdate
+		});
+	}
+
 	render() {
 		return (
 			<div>
@@ -335,8 +384,12 @@ class App extends React.Component {
 				</div>
 				<div className="btns">
 					{/* <button onClick={this.pdfOut}>pdf out</button> */}
-					<button onClick={this.overwrite}>overwrite</button>
-					<button onClick={this.createPdf.bind(this, false)}>update</button>
+					<button onClick={this.overwrite} onMouseEnter={this.hoveredOverwrite} onMouseLeave={this.hoveredOverwrite}>
+						{this.state.isHoveredOverwrite ? "Draft: " + this.state.currentDraft : "Overwrite"}
+					</button>
+					<button onClick={this.createPdf.bind(this, false)} onMouseEnter={this.hoveredUpdate} onMouseLeave={this.hoveredUpdate}>
+						{this.state.isHoveredUpdate ? "Draft: " + this.state.nextDraft : "Update"}
+					</button>
 				</div>
 			</div>
 		);
