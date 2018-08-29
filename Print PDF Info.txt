@@ -1,0 +1,28 @@
+Arg[1]:
+//sfphq-xppsrv01/XPP/SFP/alljobz/CLS_training/GRP_brandon/JOB_s001334x1_training
+
+
+Clean:
+psfmtdrv -job -nhdr -df {LOCATION} -pn {PDF NAME} -pdfmark -distill -pdfusegs -efd1 -frames
+
+
+Marked:
+psfmtdrv -job -nhdr -df {LOCATION} -pn {PDF NAME} -pdfmark -distill -pdfusegs -efd1 -frames -mkta 0
+
+
+MarkedCPO:
+cap psfmtdrv -job -nhdr -cap -df {LOCATION} -pn {PDF NAME} -pdfmark -distill -pdfusegs -efd1 -frames -mkta 0
+
+
+Cumulative:
+psfmtdrv -job -nhdr -df {LOCATION} -pn {PDF NAME} -pdfmark -distill -pdfusegs -efd1 -frames -mkta baseline
+
+
+Cumulative w/Level:
+psfmtdrv -job -nhdr -df {LOCATION} -pn {PDF NAME} -pdfmark -distill -pdfusegs -efd1 -frames -mkta {LEVEL} 
+
+
+
+Processing DIV_101-cov
+
+Div files in use - Waiting

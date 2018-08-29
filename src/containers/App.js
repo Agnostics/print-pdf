@@ -32,6 +32,7 @@ class App extends React.Component {
 			nextDraft: 0,
 			isHoveredOverwrite: false,
 			isHoveredUpdate: false,
+			shift: false,
 			proofs: ["clean", "marked", "markedCPO"]
 		};
 
@@ -45,6 +46,7 @@ class App extends React.Component {
 		this.getLocation = this.getLocation.bind(this);
 		this.isValidChoices = this.isValidChoices.bind(this);
 		this.hoveredOverwrite = this.hoveredOverwrite.bind(this);
+		this.clickPDF = this.clickPDF.bind(this);
 
 		this.hoveredUpdate = this.hoveredUpdate.bind(this);
 		this.getDraft = this.getDraft.bind(this);
@@ -144,7 +146,14 @@ class App extends React.Component {
 	}
 
 	openFolder() {
-		shell.openItem(this.state.location);
+		if (this.state.shift) {
+			shell.openItem(this.state.location);
+			console.log("Opening " + this.state.location);
+		} else {
+			shell.openItem("N:\\PDF\\out");
+
+			console.log("Opening " + "N:\\PDF\\out");
+		}
 	}
 
 	getLocation() {
@@ -174,11 +183,16 @@ class App extends React.Component {
 		remote.getCurrentWindow().reload();
 	}
 
-	overwrite() {
+	overwrite(e) {
+		if (!e.shiftKey) {
+			this.createPdf(true, false);
+			return;
+		}
+
 		smalltalk
 			.confirm("Overwrite", "Are you sure?")
 			.then(() => {
-				this.createPdf(true);
+				this.createPdf(true, true);
 			})
 			.catch(() => {
 				console.log("Option: no");
@@ -218,8 +232,8 @@ class App extends React.Component {
 					if (temp[0].split("_").length > 4) {
 						let tempDraft = temp[0].split("_");
 						tempDraft = tempDraft[tempDraft.length - 1].substring(5);
-						draftNumber = tempDraft;
-						if (draftNumber < tempDraft) draftNumber = tempDraft;
+
+						if (parseInt(draftNumber) < parseInt(tempDraft)) draftNumber = tempDraft;
 					}
 				}
 			});
@@ -240,7 +254,16 @@ class App extends React.Component {
 		});
 	}
 
-	createPdf(overwrite, companyName) {
+	clickPDF(e) {
+		if (e.shiftKey) {
+			this.setState({ shift: true });
+			this.createPdf(false, true);
+		} else {
+			this.createPdf(false, false);
+		}
+	}
+
+	createPdf(overwrite, shift, companyName) {
 		if (!this.isValidChoices()) return;
 
 		let company;
@@ -251,9 +274,16 @@ class App extends React.Component {
 			company = companyName;
 		}
 
-		let location = this.state.location;
+		let location = "";
+		let jobLocation = this.state.location;
 
-		fs.readdir(location, (err, files) => {
+		if (shift) {
+			location = jobLocation;
+		} else {
+			location = "N:\\PDF\\out";
+		}
+
+		fs.readdir(jobLocation, (err, files) => {
 			if (err) return;
 
 			files.forEach(a => {
@@ -266,15 +296,15 @@ class App extends React.Component {
 
 					if (temp[1] === "pdf") {
 						if (temp[0].split("_").length > 4) {
-							if (companyName !== undefined || overwrite) company = temp[0].split("_")[2];
+							if (companyName === undefined || overwrite) company = temp[0].split("_")[2];
 
 							let tempDraft = temp[0].split("_");
 							tempDraft = tempDraft[tempDraft.length - 1].substring(5);
 
 							if (draftNumber < tempDraft) draftNumber = tempDraft;
 
-							if (!overwrite)
-								fs.rename(`${location}\\${file}`, `${location}\\Old PDF\\${file}`, err => {
+							if (!overwrite && temp[0].includes("Draft") && shift)
+								fs.rename(`${jobLocation}\\${file}`, `${jobLocation}\\Old PDF\\${file}`, err => {
 									if (err) {
 										console.log(err);
 										return;
@@ -321,7 +351,7 @@ class App extends React.Component {
 				smalltalk
 					.prompt("No PDFs found", "Enter company's name")
 					.then(value => {
-						this.createPdf(false, value);
+						this.createPdf(false, this.state.shiftKey, value);
 						console.log(`Company name: ${value}`);
 					})
 					.catch(err => {
@@ -350,7 +380,8 @@ class App extends React.Component {
 				{this.state.results ? (
 					<div className="results">
 						<h1>
-							Proofs have<br /> been created.
+							Proofs have
+							<br /> been created.
 						</h1>
 						<div className="btns">
 							<button onClick={this.refreshWindow}>remake</button>
@@ -385,10 +416,10 @@ class App extends React.Component {
 				<div className="btns">
 					{/* <button onClick={this.pdfOut}>pdf out</button> */}
 					<button onClick={this.overwrite} onMouseEnter={this.hoveredOverwrite} onMouseLeave={this.hoveredOverwrite}>
-						{this.state.isHoveredOverwrite ? "Draft: " + this.state.currentDraft : "Overwrite"}
+						{this.state.isHoveredOverwrite ? "draft: " + this.state.currentDraft : "current"}
 					</button>
-					<button onClick={this.createPdf.bind(this, false)} onMouseEnter={this.hoveredUpdate} onMouseLeave={this.hoveredUpdate}>
-						{this.state.isHoveredUpdate ? "Draft: " + this.state.nextDraft : "Update"}
+					<button onClick={this.clickPDF} onMouseEnter={this.hoveredUpdate} onMouseLeave={this.hoveredUpdate}>
+						{this.state.isHoveredUpdate ? "draft: " + this.state.nextDraft : "update"}
 					</button>
 				</div>
 			</div>
