@@ -284,7 +284,10 @@ class App extends React.Component {
 		}
 
 		fs.readdir(jobLocation, (err, files) => {
-			if (err) return;
+			if (err) {
+				console.log(err);
+				return;
+			}
 
 			files.forEach(a => {
 				if (a.indexOf(".pdf") > -1) run = true;
