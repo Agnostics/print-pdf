@@ -56,7 +56,7 @@ function getJobLocation() {
 	let arg1;
 
 	if (dev) {
-		arg1 = "//sfphq-xppsrv01/XPP/SFP/alljobz/CLS_training/GRP_brandon/JOB_s001337x1_pom";
+		arg1 = "//sfphq-xppsrv01/XPP/SFP/alljobz/CLS_training/GRP_brandon/JOB_s001337x1_pom_print_deez";
 	} else {
 		arg1 = process.argv[1]; //PROD: Use passed argv from XPP
 	}

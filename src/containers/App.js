@@ -184,19 +184,18 @@ class App extends React.Component {
 	}
 
 	overwrite(e) {
-		if (!e.shiftKey) {
+		if (e.shiftKey) {
+			smalltalk
+				.confirm("Overwrite", "Are you sure?")
+				.then(() => {
+					this.createPdf(true, true);
+				})
+				.catch(() => {
+					console.log("Option: no");
+				});
+		} else {
 			this.createPdf(true, false);
-			return;
 		}
-
-		smalltalk
-			.confirm("Overwrite", "Are you sure?")
-			.then(() => {
-				this.createPdf(true, true);
-			})
-			.catch(() => {
-				console.log("Option: no");
-			});
 	}
 
 	isValidChoices() {
@@ -270,6 +269,8 @@ class App extends React.Component {
 		let draftNumber = 0;
 		let run = false;
 
+		console.log(remote.getGlobal("jobNumber").substring(4));
+
 		if (typeof companyName == "string") {
 			company = companyName;
 		}
@@ -299,7 +300,20 @@ class App extends React.Component {
 
 					if (temp[1] === "pdf") {
 						if (temp[0].split("_").length > 4) {
-							if (companyName === undefined || overwrite) company = temp[0].split("_")[2];
+							let jobNumber = remote.getGlobal("jobNumber").substring(4);
+							let split = jobNumber.split("_");
+
+							let comp = temp[0];
+
+							split.forEach(element => {
+								comp = comp.replace(element + "_", "");
+							});
+
+							if (companyName === undefined || overwrite) {
+								company = comp.split("_")[0];
+							}
+
+							console.log(comp);
 
 							let tempDraft = temp[0].split("_");
 							tempDraft = tempDraft[tempDraft.length - 1].substring(5);
