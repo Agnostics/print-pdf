@@ -40,9 +40,16 @@ module.exports = {
 			},
 			{
 				test: /\.(eot|svg|ttf|woff|woff2)$/,
+<<<<<<< HEAD
 				loader: "file-loader?name=public/fonts/[name].[ext]"
 			},
 			{ test: /\.(png)$/, loader: "url-loader?limit=100000" }
+=======
+				use: [{ loader: "file-loader?name=font/[name]__[hash:base64:5].[ext]" }],
+				include: defaultInclude
+			},
+			{ test: /\.(png|woff|woff2|eot|ttf|svg)$/, loader: "url-loader?limit=100000" }
+>>>>>>> f8a2ef2d2b5c58ce2913264bb0afadd9af338424
 		]
 	},
 	target: "electron-renderer",

@@ -1,6 +1,7 @@
 import React, { Component } from "react";
 import "./style.scss";
 
+<<<<<<< HEAD
 class Loading extends Component {
 	constructor(props) {
 		super(props);
@@ -50,5 +51,20 @@ class Loading extends Component {
 		);
 	}
 }
+=======
+const Loading = () => {
+	return (
+		<div className="progress">
+			<div className="prog-text">Generating proofs...</div>
+			<div className="sk-folding-cube">
+				<div className="sk-cube1 sk-cube" />
+				<div className="sk-cube2 sk-cube" />
+				<div className="sk-cube4 sk-cube" />
+				<div className="sk-cube3 sk-cube" />
+			</div>
+		</div>
+	);
+};
+>>>>>>> f8a2ef2d2b5c58ce2913264bb0afadd9af338424
 
 export default Loading;

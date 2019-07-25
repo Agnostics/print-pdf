@@ -7,8 +7,11 @@ import Titlebar from "../components/Titlebar";
 import Checkbox from "../components/Checkbox";
 import Loading from "../components/Loading";
 
+<<<<<<< HEAD
 import logo from "./logo.svg";
 
+=======
+>>>>>>> f8a2ef2d2b5c58ce2913264bb0afadd9af338424
 import fs from "fs";
 
 import smalltalk from "smalltalk/legacy";
@@ -29,14 +32,22 @@ class App extends React.Component {
 			job: "",
 			companyName: "",
 			draftNumber: 1,
+<<<<<<< HEAD
 			location: "N:\\PDF\\out",
+=======
+			location: "",
+>>>>>>> f8a2ef2d2b5c58ce2913264bb0afadd9af338424
 			currentDraft: 0,
 			nextDraft: 0,
 			isHoveredOverwrite: false,
 			isHoveredUpdate: false,
 			shift: false,
+<<<<<<< HEAD
 			proofs: ["clean", "marked", "markedCPO"],
 			info: []
+=======
+			proofs: ["clean", "marked", "markedCPO"]
+>>>>>>> f8a2ef2d2b5c58ce2913264bb0afadd9af338424
 		};
 
 		this.handleChange = this.handleChange.bind(this);
@@ -73,9 +84,14 @@ class App extends React.Component {
 			if (info.includes("Div files in use")) {
 				smalltalk.alert("Error", "Div files in use - Close to proceed");
 			}
+<<<<<<< HEAD
 			console.log(info);
 			let debugInfo = this.state.info.concat(info);
 			this.setState({ info: debugInfo });
+=======
+
+			console.log(info);
+>>>>>>> f8a2ef2d2b5c58ce2913264bb0afadd9af338424
 		});
 
 		ipc.on("make_cpo_lvl", (event, type, location, name) => {
@@ -101,10 +117,19 @@ class App extends React.Component {
 					if (this.state.level == "001") {
 						name = `${remote.getGlobal("jobNumber").substring(4)}_${this.state.companyName}_CumulativeCPO_Draft${this.state.draftNumber}`;
 					} else {
+<<<<<<< HEAD
 						name = `${remote.getGlobal("jobNumber").substring(4)}_${this.state.companyName}_MarkedCPO_${this.state.level}_Draft${this.state.draftNumber}`;
 					}
 
 					ipc.send("set-level", "N:\\PDF\\out", name, this.state.level);
+=======
+						name = `${remote.getGlobal("jobNumber").substring(4)}_${this.state.companyName}_MarkedCPO_${this.state.level}_Draft${
+							this.state.draftNumber
+						}`;
+					}
+
+					ipc.send("set-level", this.state.location, name, this.state.level);
+>>>>>>> f8a2ef2d2b5c58ce2913264bb0afadd9af338424
 					return;
 				}
 			}
@@ -144,10 +169,14 @@ class App extends React.Component {
 
 	loadResults(isErr) {
 		if (isErr) console.log("ABORT MISSION");
+<<<<<<< HEAD
 		this.setState({ results: true, loading: true });
 
 		let logo = document.getElementById("logo");
 		logo.style.display = "none";
+=======
+		this.setState({ results: true, loading: false });
+>>>>>>> f8a2ef2d2b5c58ce2913264bb0afadd9af338424
 	}
 
 	openFolder() {
@@ -292,7 +321,10 @@ class App extends React.Component {
 		fs.readdir(jobLocation, (err, files) => {
 			if (err) {
 				console.log(err);
+<<<<<<< HEAD
 				smalltalk.alert("Error", "Job folder not found.");
+=======
+>>>>>>> f8a2ef2d2b5c58ce2913264bb0afadd9af338424
 				return;
 			}
 
@@ -352,7 +384,13 @@ class App extends React.Component {
 						if (this.state.level == "001") {
 							name = `${remote.getGlobal("jobNumber").substring(4)}_${this.state.companyName}_CumulativeCPO_Draft${this.state.draftNumber}`;
 						} else {
+<<<<<<< HEAD
 							name = `${remote.getGlobal("jobNumber").substring(4)}_${this.state.companyName}_MarkedCPO_${this.state.level}_Draft${this.state.draftNumber}`;
+=======
+							name = `${remote.getGlobal("jobNumber").substring(4)}_${this.state.companyName}_MarkedCPO_${this.state.level}_Draft${
+								this.state.draftNumber
+							}`;
+>>>>>>> f8a2ef2d2b5c58ce2913264bb0afadd9af338424
 						}
 					} else {
 						name = `${remote.getGlobal("jobNumber").substring(4)}_${company}_${type.charAt(0).toUpperCase() + type.slice(1)}_Draft${draftNumber}`;
@@ -397,6 +435,7 @@ class App extends React.Component {
 	render() {
 		return (
 			<div>
+<<<<<<< HEAD
 				{this.state.results ? (
 					<div className="results">
 						<div className="btns">
@@ -411,6 +450,23 @@ class App extends React.Component {
 				<div id="logo" className="logo">
 					<img src={logo} />
 				</div>
+=======
+				{this.state.loading ? <Loading /> : null}
+				{this.state.results ? (
+					<div className="results">
+						<h1>
+							Proofs have
+							<br /> been created.
+						</h1>
+						<div className="btns">
+							<button onClick={this.refreshWindow}>remake</button>
+							<button onClick={this.openFolder}>view</button>
+						</div>
+					</div>
+				) : null}
+
+				<Titlebar job={remote.getGlobal("jobNumber")} />
+>>>>>>> f8a2ef2d2b5c58ce2913264bb0afadd9af338424
 				<div className="main group">
 					<Checkbox checked={this.state.clean} change={this.toggle.bind(this, "clean")} label="clean" />
 					<Checkbox checked={this.state.marked} change={this.toggle.bind(this, "marked")} label="marked" />
@@ -422,12 +478,25 @@ class App extends React.Component {
 					<Checkbox checked={this.state.cpolvl} change={this.toggle.bind(this, "cpolvl")} label="markedCPO" />
 
 					<div>
+<<<<<<< HEAD
 						<input id="set-lvl" type="number" min="0" placeholder="enter level" value={this.state.level} onChange={this.handleChange} onBlur={this.handleLevel} />
+=======
+						<input
+							id="set-lvl"
+							type="number"
+							min="0"
+							placeholder="enter level"
+							value={this.state.level}
+							onChange={this.handleChange}
+							onBlur={this.handleLevel}
+						/>
+>>>>>>> f8a2ef2d2b5c58ce2913264bb0afadd9af338424
 					</div>
 				</div>
 				<div className="btns">
 					{/* <button onClick={this.pdfOut}>pdf out</button> */}
 					<button onClick={this.overwrite} onMouseEnter={this.hoveredOverwrite} onMouseLeave={this.hoveredOverwrite}>
+<<<<<<< HEAD
 						overwrite
 						<br />
 						<span>{"draft: " + this.state.currentDraft}</span>
@@ -436,6 +505,12 @@ class App extends React.Component {
 						update
 						<br />
 						<span>{"draft: " + this.state.nextDraft}</span>
+=======
+						{this.state.isHoveredOverwrite ? "draft: " + this.state.currentDraft : "current"}
+					</button>
+					<button onClick={this.clickPDF} onMouseEnter={this.hoveredUpdate} onMouseLeave={this.hoveredUpdate}>
+						{this.state.isHoveredUpdate ? "draft: " + this.state.nextDraft : "update"}
+>>>>>>> f8a2ef2d2b5c58ce2913264bb0afadd9af338424
 					</button>
 				</div>
 			</div>

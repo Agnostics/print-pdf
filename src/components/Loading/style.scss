@@ -1,5 +1,9 @@
 .progress {
+<<<<<<< HEAD
 	background-color: rgb(255, 255, 255);
+=======
+	background-color: rgba(255, 255, 255, 0.95);
+>>>>>>> f8a2ef2d2b5c58ce2913264bb0afadd9af338424
 	position: absolute;
 	height: calc(100% - 30px);
 	margin-top: 30px;
@@ -13,6 +17,7 @@
 .prog-text {
 	position: absolute;
 	text-align: center;
+<<<<<<< HEAD
 	margin-top: 94px;
 	margin-left: 150px;
 	font-size: 16px;
@@ -37,11 +42,20 @@
 .debugText {
 	display: block;
 	width: 100%;
+=======
+	margin-top: 174px;
+	margin-left: 42px;
+	font-size: 19px;
+>>>>>>> f8a2ef2d2b5c58ce2913264bb0afadd9af338424
 	letter-spacing: 1px;
 }
 
 .sk-folding-cube {
+<<<<<<< HEAD
 	margin: 22px auto;
+=======
+	margin: 90px auto;
+>>>>>>> f8a2ef2d2b5c58ce2913264bb0afadd9af338424
 	width: 50px;
 	height: 50px;
 	position: relative;
@@ -65,7 +79,11 @@
 	left: 0;
 	width: 100%;
 	height: 100%;
+<<<<<<< HEAD
 	background-color: #00578e;
+=======
+	background-color: #424242;
+>>>>>>> f8a2ef2d2b5c58ce2913264bb0afadd9af338424
 	-webkit-animation: sk-foldCubeAngle 2.4s infinite linear both;
 	animation: sk-foldCubeAngle 2.4s infinite linear both;
 	-webkit-transform-origin: 100% 100%;

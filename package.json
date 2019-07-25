@@ -1,5 +1,6 @@
 {
 	"name": "print-pdf",
+<<<<<<< HEAD
 	"version": "1.0.0",
 	"description": "Creates batch file PDFs from SDL XPP",
 	"author": "Brandon Padilla",
@@ -7,6 +8,15 @@
 	"repository": {
 		"type": "git",
 		"url": "https://github.com/astrobinary/print-pdf.git"
+=======
+	"version": "0.0.1",
+	"description": "Creates batch file PDFs from SDL XPP",
+	"author": "Brandon Padilla",
+	"homepage": "https://github.com/agnostics/print-pdf",
+	"repository": {
+		"type": "git",
+		"url": "https://github.com/agnostics/print-pdf.git"
+>>>>>>> f8a2ef2d2b5c58ce2913264bb0afadd9af338424
 	},
 	"license": "MIT",
 	"main": "main.js",
@@ -32,9 +42,13 @@
 		"files": [
 			"package.json",
 			"main.js",
+<<<<<<< HEAD
 			"dist/**/*",
 			"dist/font/*",
 			"dist/img/*"
+=======
+			"dist/**/*"
+>>>>>>> f8a2ef2d2b5c58ce2913264bb0afadd9af338424
 		]
 	},
 	"devDependencies": {
