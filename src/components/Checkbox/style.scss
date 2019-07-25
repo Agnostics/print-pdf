@@ -1,7 +1,6 @@
 .container {
 	display: inline-block;
 	position: relative;
-<<<<<<< HEAD
 	cursor: pointer;
 	font-size: 20px;
 	user-select: none;
@@ -19,18 +18,6 @@
 	.checkText {
 		margin-left: 30px;
 	}
-=======
-	margin-top: 6px;
-	padding-left: 27px;
-	cursor: pointer;
-	font-size: 20px;
-	user-select: none;
-	width: 85%;
-	margin-left: 5px;
-	line-height: 16px;
-	padding-bottom: 10px;
-	letter-spacing: 2px;
->>>>>>> f8a2ef2d2b5c58ce2913264bb0afadd9af338424
 
 	input {
 		position: absolute;
@@ -41,20 +28,12 @@
 
 .checkmark {
 	position: absolute;
-<<<<<<< HEAD
 	top: 7px;
 	left: 5px;
 	height: 15px;
 	width: 15px;
 	border: 2px solid #515151;
 
-=======
-	top: 0;
-	left: 0;
-	height: 15px;
-	width: 15px;
-	border: 2px solid #515151;
->>>>>>> f8a2ef2d2b5c58ce2913264bb0afadd9af338424
 	&:after {
 		left: 3px;
 		top: 0px;

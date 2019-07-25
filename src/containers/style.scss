@@ -1,16 +1,9 @@
 .group {
-<<<<<<< HEAD
 	margin: 20px;
 	border: 2px solid #515151;
 	color: black;
 	font-family: consolas;
 	border-radius: 3px;
-=======
-	margin: 10px;
-	border: 2px solid #515151;
-	color: black;
-	font-family: consolas;
->>>>>>> f8a2ef2d2b5c58ce2913264bb0afadd9af338424
 }
 
 .main {
@@ -28,7 +21,6 @@
 	display: inline-block;
 
 	button {
-<<<<<<< HEAD
 		margin: 0 35px;
 		width: 140px;
 		height: 60px;
@@ -48,18 +40,6 @@
 		&:hover {
 			cursor: pointer;
 			background-color: #00578e;
-=======
-		margin: 0 8px;
-		width: 100px;
-		height: 30px;
-		background-color: #414141;
-		border: none;
-		font-size: 14px;
-		color: white;
-		letter-spacing: 3px;
-		&:hover {
-			cursor: pointer;
->>>>>>> f8a2ef2d2b5c58ce2913264bb0afadd9af338424
 		}
 	}
 }
@@ -67,7 +47,6 @@
 #set-lvl {
 	display: block;
 	text-align: center;
-<<<<<<< HEAD
 	margin-top: 7px;
 	margin-left: 5px;
 	height: 24px;
@@ -84,28 +63,12 @@
 	padding-top: 25px;
 	width: 100%;
 	z-index: 101;
-=======
-	margin: 0 auto;
-	margin-top: 7px;
-	height: 20px;
-	border: 2px solid #515151;
-}
-
-.results {
-	background-color: rgba(255, 255, 255, 0.95);
-	position: absolute;
-	height: calc(100% - 30px);
-	margin-top: 30px;
-	width: 100%;
-	z-index: 100;
->>>>>>> f8a2ef2d2b5c58ce2913264bb0afadd9af338424
 	user-select: none;
 	cursor: default;
 	overflow: hidden;
 
 	h1 {
 		text-align: center;
-<<<<<<< HEAD
 		font-size: 16px;
 		margin-top: 16px;
 		letter-spacing: 1px;
@@ -123,11 +86,3 @@
 		width: 100%;
 	}
 }
-=======
-		margin-top: 85px;
-		margin-bottom: 20px;
-		font-size: 19px;
-		letter-spacing: 1px;
-	}
-}
->>>>>>> f8a2ef2d2b5c58ce2913264bb0afadd9af338424

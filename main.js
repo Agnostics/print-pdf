@@ -15,13 +15,8 @@ global.dev = dev;
 
 function createWindow() {
 	mainWindow = new BrowserWindow({
-<<<<<<< HEAD
 		width: 450,
 		height: 500,
-=======
-		width: 250,
-		height: 350,
->>>>>>> f8a2ef2d2b5c58ce2913264bb0afadd9af338424
 		show: false,
 		frame: false,
 		resizable: false
@@ -148,11 +143,8 @@ ipcMain.on("print-pdf", (event, TYPE, LOCATION, NAME, LEVEL, isAlone) => {
 });
 
 ipcMain.on("set-level", (event, LOCATION, NAME, LEVEL) => {
-<<<<<<< HEAD
 	event.sender.send("debug", `CURRENT LOCATION: ${LOCATION}`);
 
-=======
->>>>>>> f8a2ef2d2b5c58ce2913264bb0afadd9af338424
 	let ls;
 
 	if (!dev) {
@@ -184,14 +176,7 @@ ipcMain.on("set-level", (event, LOCATION, NAME, LEVEL) => {
 			event.sender.send("debug", `Level ${LEVEL} sucessfully restored.`);
 
 			if (!dev) {
-<<<<<<< HEAD
 				let print = spawn(`cap psfmtdrv -job -nhdr -cap -df ${LOCATION} -pn ${NAME} -pdfmark -distill -pdfusegs -efd1 -frames -mkta ${LEVEL}`, [], { shell: true, cwd: global.jobLocation });
-=======
-				let print = spawn(`cap psfmtdrv -job -nhdr -cap -df ${LOCATION} -pn ${NAME} -pdfmark -distill -pdfusegs -efd1 -frames -mkta 0`, [], {
-					shell: true,
-					cwd: global.jobLocation
-				});
->>>>>>> f8a2ef2d2b5c58ce2913264bb0afadd9af338424
 
 				print.on("close", code => {
 					if (code == 0) event.sender.send("proof_made", "cpolvl", false);
@@ -218,14 +203,7 @@ ipcMain.on("set-level", (event, LOCATION, NAME, LEVEL) => {
 				});
 			}
 
-<<<<<<< HEAD
 			event.sender.send("debug", `Processing: cap psfmtdrv -job -nhdr -cap -df ${LOCATION} -pn ${NAME} -pdfmark -distill -pdfusegs -efd1 -frames -mkta ${LEVEL}`);
-=======
-			event.sender.send(
-				"debug",
-				`Processing: cap psfmtdrv -job -nhdr -cap -df ${LOCATION} -pn ${NAME} -pdfmark -distill -pdfusegs -efd1 -frames -mkta 0`
-			);
->>>>>>> f8a2ef2d2b5c58ce2913264bb0afadd9af338424
 		} else {
 			console.log("DONE BUT WITH CODE: " + code);
 		}
