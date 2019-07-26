@@ -183,7 +183,9 @@ class App extends React.Component {
 
 		jobLocation = `M:\\${jobNumber}\\x${xNumber}`;
 
-		shell.openItem(jobLocation);
+		if (!shell.openItem(jobLocation)) {
+			smalltalk.alert("Error", "Job folder not found.");
+		}
 	}
 
 	composeTwice() {

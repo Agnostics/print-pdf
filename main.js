@@ -145,68 +145,108 @@ ipcMain.on("print-pdf", (event, TYPE, LOCATION, NAME, LEVEL, isAlone) => {
 ipcMain.on("set-level", (event, LOCATION, NAME, LEVEL) => {
 	event.sender.send("debug", `CURRENT LOCATION: ${LOCATION}`);
 
-	let ls;
+	let sfp, baseline, print, restore, deleteTemp;
 
-	if (!dev) {
-		ls = spawn(`xcopy ${global.jobNumber.substring(4)}_Level${LEVEL}\\*Tbaseline "${global.jobLocation}" /e /i /u`, [], {
+	//Copy baseline from SFP into TempBaseline Folder
+	sfp = spawn(`xcopy ${global.jobLocation}\\*Tbaseline "N:\\TempBaseline\\${global.jobNumber}" /e /i`, [], {
+		shell: true,
+		cwd: global.jobLocation
+	});
+
+	sfp.stdin.write("a");
+
+	// xcopy N:\SFP\alljobz\CLS_training\GRP_brandon\JOB_s001955x3_fake\*Tbaseline  N:\TempBaseline\s001955x3 /e /i
+
+	sfp.on("close", data => {
+		sfp.stdin.end();
+		event.sender.send("debug", `Restoring level: ${LEVEL}`);
+
+		baseline = spawn(`xcopy ${global.jobNumber.substring(4)}_Level${LEVEL}\\*Tbaseline "${global.jobLocation}" /e /i /u`, [], {
 			shell: true,
 			cwd: "M:\\BaselineBackup"
 		});
-	}
 
-	if (dev) {
-		ls = spawn("ping 127.1.0.0", [], { shell: true });
-	}
+		baseline.stderr.on("data", data => {
+			event.sender.send("proof_made", `Error restoring level: ${data}`, true);
+		});
 
-	event.sender.send("debug", `Restoring level: ${LEVEL}`);
+		baseline.stdout.on("data", data => {
+			event.sender.send("debug", data.toString());
+		});
 
-	ls.stderr.on("data", data => {
-		event.sender.send("proof_made", `Error restoring level: ${data}`, true);
+		baseline.stdin.write("a");
+
+		baseline.on("close", code => {
+			baseline.stdin.end();
+			if (code == 0) {
+				event.sender.send("debug", `Level ${LEVEL} sucessfully restored.`);
+
+				print = spawn(`cap psfmtdrv -job -nhdr -cap -df ${LOCATION} -pn ${NAME} -pdfmark -distill -pdfusegs -efd1 -frames -mkta ${LEVEL}`, [], { shell: true, cwd: global.jobLocation });
+
+				print.stderr.on("data", data => {
+					event.sender.send("debug", `Error: ${data}`);
+					return;
+				});
+
+				print.stdout.on("data", data => {
+					event.sender.send("debug", data.toString());
+				});
+
+				print.on("close", code => {
+					restore = spawn(`xcopy N:\\TempBaseline\\${global.jobNumber}\\*Tbaseline "${global.jobLocation}" /e /i /u`, [], {
+						shell: true,
+						cwd: "N:\\TempBaseline"
+					});
+
+					restore.stdout.on("data", data => {
+						event.sender.send("debug", data.toString());
+					});
+
+					restore.stderr.on("data", data => {
+						event.sender.send("debug", `Error: ${data}`);
+						return;
+					});
+
+					restore.stdin.write("a");
+
+					restore.on("close", code => {
+						restore.stdin.end();
+						deleteTemp = spawn(`RMDIR N:\\TempBaseline\\${global.jobNumber} /Q /S`, [], {
+							shell: true,
+							cwd: "N:\\TempBaseline"
+						});
+
+						deleteTemp.stdout.on("data", data => {
+							event.sender.send("debug", data.toString());
+						});
+
+						deleteTemp.stderr.on("data", data => {
+							event.sender.send("debug", `Error: ${data}`);
+							return;
+						});
+
+						deleteTemp.on("close", code => {
+							event.sender.send("proof_made", data, false);
+							event.sender.send("debug", `Printing PDFs completed.`);
+							return;
+						});
+					});
+				});
+
+				event.sender.send("debug", `Processing: cap psfmtdrv -job -nhdr -cap -df ${LOCATION} -pn ${NAME} -pdfmark -distill -pdfusegs -efd1 -frames -mkta ${LEVEL}`);
+			} else {
+				console.log("DONE BUT WITH CODE: " + code);
+			}
+		});
 	});
 
-	ls.stdout.on("data", data => {
+	sfp.stderr.on("data", data => {
+		event.sender.send("proof_made", `Error copying baseline to temp: ${data}`, true);
+		return;
+	});
+
+	sfp.stdout.on("data", data => {
 		event.sender.send("debug", data.toString());
-	});
-
-	ls.stdin.write("a");
-
-	ls.on("close", code => {
-		ls.stdin.end();
-		if (code == 0) {
-			event.sender.send("debug", `Level ${LEVEL} sucessfully restored.`);
-
-			if (!dev) {
-				let print = spawn(`cap psfmtdrv -job -nhdr -cap -df ${LOCATION} -pn ${NAME} -pdfmark -distill -pdfusegs -efd1 -frames -mkta ${LEVEL}`, [], { shell: true, cwd: global.jobLocation });
-
-				print.on("close", code => {
-					if (code == 0) event.sender.send("proof_made", "cpolvl", false);
-				});
-
-				print.stderr.on("data", data => {
-					event.sender.send("debug", `Error: ${data}`);
-					event.sender.send("proof_made", data, true);
-					return;
-				});
-			}
-
-			if (dev) {
-				let print = spawn("ping 127.1.0.0", [], { shell: true });
-
-				print.on("close", code => {
-					if (code == 0) event.sender.send("proof_made", "cpolvl", false);
-				});
-
-				print.stderr.on("data", data => {
-					event.sender.send("debug", `Error: ${data}`);
-					event.sender.send("proof_made", data, true);
-					return;
-				});
-			}
-
-			event.sender.send("debug", `Processing: cap psfmtdrv -job -nhdr -cap -df ${LOCATION} -pn ${NAME} -pdfmark -distill -pdfusegs -efd1 -frames -mkta ${LEVEL}`);
-		} else {
-			console.log("DONE BUT WITH CODE: " + code);
-		}
 	});
 });
 
