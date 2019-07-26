@@ -16,7 +16,7 @@ global.dev = dev;
 function createWindow() {
 	mainWindow = new BrowserWindow({
 		width: 450,
-		height: 500,
+		height: 550,
 		show: false,
 		frame: false,
 		resizable: false
@@ -190,7 +190,7 @@ ipcMain.on("set-level", (event, LOCATION, NAME, LEVEL) => {
 			}
 
 			if (dev) {
-				let print = spawn("pingz 127.1.0.0", [], { shell: true });
+				let print = spawn("ping 127.1.0.0", [], { shell: true });
 
 				print.on("close", code => {
 					if (code == 0) event.sender.send("proof_made", "cpolvl", false);
@@ -207,5 +207,24 @@ ipcMain.on("set-level", (event, LOCATION, NAME, LEVEL) => {
 		} else {
 			console.log("DONE BUT WITH CODE: " + code);
 		}
+	});
+});
+
+ipcMain.on("compose", event => {
+	let ls = spawn(`jobcomp -xsh -xref -job -s`, [], { shell: true, cwd: global.jobLocation });
+
+	event.sender.send("debug", `Composing job...`);
+
+	ls.stderr.on("data", data => {
+		event.sender.send("debug", `Error: ${data}`);
+	});
+
+	ls.stdout.on("data", data => {
+		event.sender.send("debug", data.toString());
+	});
+
+	ls.on("close", code => {
+		if (code == 0) event.sender.send("debug", `Compose done`);
+		event.sender.send("compose-reply");
 	});
 });

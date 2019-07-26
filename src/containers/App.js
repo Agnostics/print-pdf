@@ -6,6 +6,7 @@ import "./style.scss";
 import Titlebar from "../components/Titlebar";
 import Checkbox from "../components/Checkbox";
 import Loading from "../components/Loading";
+import Debug from "../components/Debug";
 
 import logo from "./logo.svg";
 
@@ -19,6 +20,7 @@ class App extends React.Component {
 		this.state = {
 			loading: false,
 			results: false,
+			composing: false,
 			clean: true,
 			marked: true,
 			markedCPO: true,
@@ -40,6 +42,7 @@ class App extends React.Component {
 		};
 
 		this.handleChange = this.handleChange.bind(this);
+		this.composeTwice = this.composeTwice.bind(this);
 		this.handleLevel = this.handleLevel.bind(this);
 		this.pdfOut = this.pdfOut.bind(this);
 		this.overwrite = this.overwrite.bind(this);
@@ -68,6 +71,11 @@ class App extends React.Component {
 		}
 
 		let counter = 0;
+
+		ipc.on("compose-reply", (event, arg) => {
+			console.log(arg); // prints "pong"
+			this.setState({ composing: false });
+		});
 
 		ipc.on("debug", (event, info) => {
 			if (info.includes("Div files in use")) {
@@ -161,6 +169,28 @@ class App extends React.Component {
 		}
 	}
 
+	openJobFolder() {
+		let jobLocation = "";
+
+		let jobNumber = remote
+			.getGlobal("jobNumber")
+			.split("_")[1]
+			.split("x")[0];
+		let xNumber = remote
+			.getGlobal("jobNumber")
+			.split("_")[1]
+			.split("x")[1];
+
+		jobLocation = `M:\\${jobNumber}\\x${xNumber}`;
+
+		shell.openItem(jobLocation);
+	}
+
+	composeTwice() {
+		this.setState({ composing: true });
+		ipc.send("compose");
+	}
+
 	getLocation() {
 		let jobNumber = remote
 			.getGlobal("jobNumber")
@@ -182,6 +212,8 @@ class App extends React.Component {
 		this.getDraft(location);
 
 		this.setState({ location });
+
+		return location;
 	}
 
 	refreshWindow() {
@@ -407,9 +439,15 @@ class App extends React.Component {
 					</div>
 				) : null}
 				{this.state.loading ? <Loading debugInfo={this.state.info} /> : null}
+				{this.state.composing ? <Debug debugInfo={this.state.info} /> : null}
+
 				<Titlebar job={remote.getGlobal("jobNumber")} />
 				<div id="logo" className="logo">
 					<img src={logo} />
+				</div>
+				<div className="top-buttons">
+					<button onClick={this.composeTwice}>compose</button>
+					<button onClick={this.openJobFolder}>open job</button>
 				</div>
 				<div className="main group">
 					<Checkbox checked={this.state.clean} change={this.toggle.bind(this, "clean")} label="clean" />
@@ -426,13 +464,12 @@ class App extends React.Component {
 					</div>
 				</div>
 				<div className="btns">
-					{/* <button onClick={this.pdfOut}>pdf out</button> */}
-					<button onClick={this.overwrite} onMouseEnter={this.hoveredOverwrite} onMouseLeave={this.hoveredOverwrite}>
+					<button onClick={this.overwrite}>
 						overwrite
 						<br />
 						<span>{"draft: " + this.state.currentDraft}</span>
 					</button>
-					<button onClick={this.clickPDF} onMouseEnter={this.hoveredUpdate} onMouseLeave={this.hoveredUpdate}>
+					<button onClick={this.clickPDF}>
 						update
 						<br />
 						<span>{"draft: " + this.state.nextDraft}</span>

@@ -21,7 +21,7 @@
 		"appId": "com.brandon.app",
 		"productName": "print-pdf",
 		"win": {
-			"target": "portable"
+			"target": "zip"
 		},
 		"portable": {
 			"requestExecutionLevel": "user"

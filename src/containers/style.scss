@@ -75,6 +75,32 @@
 	}
 }
 
+.top-buttons {
+	margin-left: 14px;
+	padding-top: 20px;
+	button {
+		margin: 0 35px;
+		width: 140px;
+		height: 30px;
+		background-color: #414141d3;
+		border: none;
+		font-size: 14px;
+		color: white;
+		letter-spacing: 3px;
+		transition: 0.2s ease;
+		border-radius: 3px;
+		span {
+			font-size: 14px;
+			opacity: 0.7;
+			font-weight: normal;
+		}
+		&:hover {
+			cursor: pointer;
+			background-color: #00578e;
+		}
+	}
+}
+
 .logo {
 	margin: auto 0;
 	margin-top: 25px;
